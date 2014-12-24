@@ -11,36 +11,67 @@ import (
 var (
 	Info *log.Logger
 	Error *log.Logger
-	listOfHanldlers = make([]*Handler, 0)
+	listOfWorkers = make([]*Worker, 0)
 )
 
-type Handler struct {
-	merchant int
-	handler func(c net.Conn, b string)
+type Request struct {
+	connection net.Conn
+	body string
 }
 
-func findOrCreateHandler(merchant int) *Handler {
-	pos := -1
-	for ind, elem := range listOfHanldlers {
-		if elem.merchant == merchant {
-			pos = ind
+type Worker struct {
+	merchant int
+	inputChan chan *Request
+	quitChan chan bool
+}
+
+func (w Worker) Serve() {
+	Info.Printf("New worker for merchant %v is spawned", w.merchant)
+	var req *Request
+	for {
+		select {
+		case req = <- w.inputChan:
+			Info.Printf("Worker of merchant %v received string '%v'", w.merchant, req.body)
+			req.connection.Write([]byte("Confirm\n"))
+			req.connection.Close()
+		case <- w.quitChan:
+			Info.Println("Wroker for %v quitting", w.merchant)
+			return
 		}
 	}
-	Info.Printf("found pos: %v for merchant %v", pos, merchant)
-
-	if pos == -1 {
-		h := createHandler(merchant)
-		listOfHanldlers = append(listOfHanldlers, h)
-		Info.Println("create new handler")
-		pos = 0
-	}
-
-	return listOfHanldlers[pos]
 }
 
 func init() {
 	Info = log.New(os.Stdout, "INFO:", log.Ldate|log.Ltime|log.Lshortfile)
 	Error = log.New(os.Stderr, "ERROR:", log.Ldate|log.Ltime|log.Lshortfile)
+}
+
+func findOrCreateWorker(merchant int) *Worker {
+	pos := getPosition(merchant)
+
+	Info.Printf("found pos: %v for merchant %v", pos, merchant)
+
+	if -1 == pos {
+		h := createWorker(merchant)
+		listOfWorkers = append(listOfWorkers, h)
+
+		pos = getPosition(merchant)
+
+		Info.Printf("Spawning new worker for merchant %v", merchant)
+		go listOfWorkers[pos].Serve()
+	}
+
+	return listOfWorkers[pos]
+}
+
+func getPosition(merchant int) int {
+	pos := -1
+	for ind, elem := range listOfWorkers {
+		if elem.merchant == merchant {
+			pos = ind
+		}
+	}
+	return pos
 }
 
 func Serve() {
@@ -69,19 +100,12 @@ func Serve() {
 
 		mer, err := strconv.Atoi(params[0])
 
-		handler := findOrCreateHandler(mer)
-
-		go handler.handler(conn, params[1])
+		worker := findOrCreateWorker(mer)
+		worker.inputChan <- &Request{conn, params[1]}
 	}
 }
 
-func createHandler(num int) *Handler {
-	h := &Handler{merchant: num, handler: func(con net.Conn, body string) {
-		Info.Println(body)
-		con.Write([]byte("Confirm\n"))
-
-		con.Close()
-	}}
-
+func createWorker(merchant int) *Worker {
+	h := &Worker{ merchant, make(chan *Request), make(chan bool) }
 	return h
 }
