@@ -18,30 +18,30 @@ func NewWorkersPool() *WorkersPool {
 	return &workersPoolInstance
 }
 
-func GetWorkerForMerchant(merchant int) *Worker {
-	pos := workerPosition(merchant)
+func (wp *WorkersPool) GetWorkerForMerchant(merchant int) *Worker {
+	pos := wp.workerPosition(merchant)
 
 	if -1 == pos {
 		worker := newWorker(merchant, "/tmp")
-		appendWorker(worker)
+		wp.appendWorker(worker)
 
-		pos = workerPosition(merchant)
+		pos = wp.workerPosition(merchant)
 		go worker.Serve()
 	}
 
-	return workersPoolInstance[pos]
+	return (*wp)[pos]
 }
 
-func appendWorker(worker *Worker) {
+func (wp *WorkersPool) appendWorker(worker *Worker) {
 	mutex.Lock()
-	workersPoolInstance = append(workersPoolInstance, worker)
+	workersPoolInstance = append(*wp, worker)
 	mutex.Unlock()
 }
 
-func workerPosition(merchant int) int {
+func (wp WorkersPool) workerPosition(merchant int) int {
 	pos := -1
 	mutex.Lock()
-	for ind, elem := range workersPoolInstance {
+	for ind, elem := range wp {
 		if elem.merchant == merchant {
 			pos = ind
 		}

@@ -57,7 +57,9 @@ func Serve() {
 
 		IncomeRequestsLog.Println(input)
 
-		worker := GetWorkerForMerchant(merchant)
+		pool := NewWorkersPool()
+
+		worker := pool.GetWorkerForMerchant(merchant)
 		worker.inputChan <- &Request{conn, params[1]}
 	}
 }
