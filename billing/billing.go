@@ -4,6 +4,8 @@ import (
     "time"
     "encoding/xml"
     "fmt"
+    _ "github.com/lib/pq"
+    driver "database/sql/driver"
 )
 
 const (
@@ -24,14 +26,24 @@ func (c *customTime) UnmarshalXML(d *xml.Decoder, start xml.StartElement) error 
     return nil
 }
 
+func (c customTime) Value() (driver.Value, error) {
+    return c.Time, nil
+}
+
 type Record struct {
     XMLName xml.Name `xml:"Operation"`
-    Merchant int `xml:"Merchant"`
+    Merchant string `xml:"Merchant"`
+    OperationIdent string `xml:OperationIdent`
     Description string `xml:"Description"`
     Amount int `xml:"Amount"`
 
     OperationCreatedAt customTime `xml:"OperationCreatedAt"`
     OriginXml string
+}
+
+type Budget struct {
+    Merchant int
+    Amount int
 }
 
 func NewRecord(data string) *Record {
@@ -44,9 +56,29 @@ func NewRecord(data string) *Record {
         return nil
     }
 
+    r.OriginXml = data
+
     return &r
 }
 
-func (r *Record) Save() error {
+func (r *Record) Save() (uint64, error) {
+    var id uint64
 
+    conn := NewConnection()
+    ok := conn.QueryRow(`INSERT INTO operations (merchant_id, operation_ident, description, amount, operation_created_at, xml_data)
+                         VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`,
+        r.Merchant, r.OperationIdent, r.Description, r.Amount, r.OperationCreatedAt, r.OriginXml).Scan(&id)
+
+    if ok != nil { panic(ok) }
+
+    return id, nil
+}
+
+func (b *Budget) Calculate() (int, error) {
+    conn := NewConnection()
+    ok := conn.QueryRow(`select sum(amount) from operations where merchant_id = $1`, b.Merchant).Scan(&b.Amount)
+
+    if ok != nil { panic(ok) }
+
+    return b.Amount, nil
 }
