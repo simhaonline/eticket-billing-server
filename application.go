@@ -1,9 +1,9 @@
 package main
 
 import (
-	"eticket-billing/server"
+    "eticket-billing/server"
 )
 
 func main() {
-	server.Serve()
+    server.Serve()
 }

@@ -1,10 +1,10 @@
 package server
 
 import (
-	"net"
+    "net"
 )
 
 type Request struct {
-	connection net.Conn
-	body string
+    connection net.Conn
+    body string
 }
