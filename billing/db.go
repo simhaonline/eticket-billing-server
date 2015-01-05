@@ -7,7 +7,7 @@ import (
 
 /*
 create table operations (
-  id serial primary key
+  id serial primary key,
   merchant_id varchar(20),
   operation_ident varchar(20),
   description text,

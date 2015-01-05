@@ -5,7 +5,7 @@ import (
     "net"
     "os"
     "strings"
-    "strconv"
+    "bufio"
 )
 
 var (
@@ -42,24 +42,36 @@ func Serve() {
             Error.Println(err)
         }
 
-        // TODO should read all string
-        buf := make([]byte, 1024)
-        _, err = conn.Read(buf)
-
-        if err != nil {
-            Error.Println("Error reading:", err.Error())
+        connbuf := bufio.NewReader(conn)
+        var input string
+        for {
+            input, err = connbuf.ReadString('\n')
+            if err!= nil {
+                break
+            }
         }
 
-        input := string(buf)
-        Info.Println(input)
-        params := strings.Split(input, "###")
-        merchant, err := strconv.Atoi(params[0])
+        // TODO sanitize string
+        params := strings.Split(input, " ")
 
-        IncomeRequestsLog.Println(input)
+        if params[0] != "I'm" {
+            conn.Write([]byte("Wrong input\n"))
+            conn.Close()
+        } else {
+            // TODO check params[1]
+            merchant := params[1]
 
-        pool := NewWorkersPool()
+            _, err = conn.Write([]byte("Hi " + params[1] + "\n"))
+            if err != nil { panic(err) }
 
-        worker := pool.GetWorkerForMerchant(merchant)
-        worker.inputChan <- &Request{conn, params[1]}
+            Info.Println(input)
+
+            IncomeRequestsLog.Println(input)
+
+            pool := NewWorkersPool()
+
+            worker := pool.GetWorkerForMerchant(merchant)
+            worker.inputChan <- &Request{conn, merchant}
+        }
     }
 }

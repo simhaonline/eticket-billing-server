@@ -1,7 +1,7 @@
 package server
 
 import (
-	"sync"
+    "sync"
 )
 
 type WorkersPool []*Worker
@@ -11,41 +11,41 @@ var workersPoolInstance WorkersPool
 var mutex = sync.Mutex{}
 
 func NewWorkersPool() *WorkersPool {
-	if workersPoolInstance == nil {
-		workersPoolInstance = make(WorkersPool, 0)
-	}
+    if workersPoolInstance == nil {
+        workersPoolInstance = make(WorkersPool, 0)
+    }
 
-	return &workersPoolInstance
+    return &workersPoolInstance
 }
 
-func (wp *WorkersPool) GetWorkerForMerchant(merchant int) *Worker {
-	pos := wp.workerPosition(merchant)
+func (wp *WorkersPool) GetWorkerForMerchant(merchant string) *Worker {
+    pos := wp.workerPosition(merchant)
 
-	if -1 == pos {
-		worker := newWorker(merchant, "/tmp")
-		wp.appendWorker(worker)
+    if -1 == pos {
+        worker := newWorker(merchant, "/tmp")
+        wp.appendWorker(worker)
 
-		pos = wp.workerPosition(merchant)
-		go worker.Serve()
-	}
+        pos = wp.workerPosition(merchant)
+        go worker.Serve()
+    }
 
-	return (*wp)[pos]
+    return (*wp)[pos]
 }
 
 func (wp *WorkersPool) appendWorker(worker *Worker) {
-	mutex.Lock()
-	workersPoolInstance = append(*wp, worker)
-	mutex.Unlock()
+    mutex.Lock()
+    workersPoolInstance = append(*wp, worker)
+    mutex.Unlock()
 }
 
-func (wp WorkersPool) workerPosition(merchant int) int {
-	pos := -1
-	mutex.Lock()
-	for ind, elem := range wp {
-		if elem.merchant == merchant {
-			pos = ind
-		}
-	}
-	mutex.Unlock()
-	return pos
+func (wp WorkersPool) workerPosition(merchant string) int {
+    pos := -1
+    mutex.Lock()
+    for ind, elem := range wp {
+        if elem.merchant == merchant {
+            pos = ind
+        }
+    }
+    mutex.Unlock()
+    return pos
 }

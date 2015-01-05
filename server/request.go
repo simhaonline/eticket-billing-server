@@ -6,5 +6,5 @@ import (
 
 type Request struct {
     connection net.Conn
-    body string
+    merchant string
 }

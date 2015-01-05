@@ -15,7 +15,7 @@ type TestSuite struct {
 
 func (suite TestSuite) TearDownTest() {
     conn := NewConnection()
-    _, ok := conn.Exec("delete from operations")
+    _, ok := conn.Exec("truncate table operations")
     if ok != nil { panic(ok) }
 }
 
@@ -30,13 +30,13 @@ func countRows() uint64 {
 }
 
 var xmlData string = `
-<Operation>
-  <Merchant>11</Merchant>
-  <OperationIdent>%v</OperationIdent>
-  <Description>Charge</Description>
-  <OperationCreatedAt>2014-10-01 20:13:56</OperationCreatedAt>
-  <Amount>%v</Amount>
-</Operation>`
+<operation>
+  <merchant>11</merchant>
+  <operation_ident>%v</operation_ident>
+  <description>Charge</description>
+  <operation_created_at>2014-10-01 20:13:56</operation_created_at>
+  <amount>%v</amount>
+</operation>`
 
 func (suite *TestSuite) TestNewRecord() {
     record := NewRecord(fmt.Sprintf(xmlData, 101, -12387))
@@ -65,7 +65,7 @@ func (suite *TestSuite) TestCalculate() {
     r2 := NewRecord(fmt.Sprintf(xmlData, 102, 33000))
     r2.Save()
 
-    b := Budget{11, 0}
+    b := Budget{"11", 0}
     result, _ := b.Calculate()
 
     suite.Equal(53200, result, "Should calculate sum of amount")
