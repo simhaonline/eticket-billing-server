@@ -11,9 +11,9 @@ type BudgetTestSuite struct {
 }
 
 func (suite *BudgetTestSuite) TestCalculate() {
-    r1 := NewRecord(fmt.Sprintf(xmlData, 101, 20200))
+    r1 := NewTransaction(fmt.Sprintf(xmlData, 101, 20200))
     r1.Save()
-    r2 := NewRecord(fmt.Sprintf(xmlData, 102, 33000))
+    r2 := NewTransaction(fmt.Sprintf(xmlData, 102, 33000))
     r2.Save()
 
     b := Budget{"11", 0}

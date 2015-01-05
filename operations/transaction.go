@@ -32,17 +32,17 @@ func (c customTime) Value() (driver.Value, error) {
 }
 
 type Transaction struct {
-    XMLName xml.Name `xml:"operation"`
+    XMLName xml.Name `xml:"request"`
     Merchant string `xml:"merchant"`
     OperationIdent string `xml:"operation_ident"`
     Description string `xml:"description"`
-    Amount int `xml:"amount"`
+    Amount int64 `xml:"amount"`
 
     OperationCreatedAt customTime `xml:"operation_created_at"`
     OriginXml string
 }
 
-func NewRecord(data string) *Transaction {
+func NewTransaction(data string) *Transaction {
     r := Transaction{}
     err := xml.Unmarshal([]byte(data), &r)
 
@@ -55,6 +55,17 @@ func NewRecord(data string) *Transaction {
     r.OriginXml = data
 
     return &r
+}
+
+func (r *Transaction) IsPossible() bool {
+    budget := Budget{Merchant: r.Merchant}
+    // TODO handle or remove error
+    amount, _ := budget.Calculate()
+    if r.Amount > 0 {
+        return true
+    } else {
+        return (amount + r.Amount > 0)
+    }
 }
 
 func (r *Transaction) Save() (uint64, error) {

@@ -29,18 +29,18 @@ func countRows() uint64 {
 }
 
 var xmlData string = `
-<operation>
+<request type="transaction">
   <merchant>11</merchant>
   <operation_ident>%v</operation_ident>
   <description>Charge</description>
   <operation_created_at>2014-10-01 20:13:56</operation_created_at>
   <amount>%v</amount>
-</operation>`
+</request>`
 
-func (suite *TransactionTestSuite) TestNewRecord() {
-    record := NewRecord(fmt.Sprintf(xmlData, 101, -12387))
+func (suite *TransactionTestSuite) TestNewTransaction() {
+    record := NewTransaction(fmt.Sprintf(xmlData, 101, -12387))
 
-    suite.Equal("*operations.Transaction", reflect.TypeOf(record).String(), "NewRecord should return new record composed from xml")
+    suite.Equal("*operations.Transaction", reflect.TypeOf(record).String(), "NewTransaction should return new record composed from xml")
     suite.Equal("11", record.Merchant)
     suite.Equal("101", record.OperationIdent)
     suite.Equal("Charge", record.Description)
@@ -52,7 +52,7 @@ func (suite *TransactionTestSuite) TestNewRecord() {
 
 func (suite *TransactionTestSuite) TestSave() {
     initialValue := countRows()
-    record := NewRecord(fmt.Sprintf(xmlData, 101, 100))
+    record := NewTransaction(fmt.Sprintf(xmlData, 101, 100))
     record.Save()
     finishValue := countRows()
     suite.Equal(1, (finishValue - initialValue), "Count of records should be changed by 1")

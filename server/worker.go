@@ -41,6 +41,16 @@ func (w Worker) Serve() {
                 amountResponse := strconv.AppendInt(make([]byte, 0), amount, 10)
                 amountResponse = append(amountResponse, '\n')
                 req.Conn.Write(amountResponse)
+            case "transaction":
+                // TODO check budget
+                transaction := operations.NewTransaction(req.XmlBody)
+                if transaction.IsPossible() {
+                    req.Conn.Write([]byte("OK\n"))
+                    transaction.Save()
+                } else {
+                    req.Conn.Write([]byte("I have not enough money\n"))
+                }
+
             default:
                 req.Conn.Write([]byte("I have no idea what to do\n"))
             }
