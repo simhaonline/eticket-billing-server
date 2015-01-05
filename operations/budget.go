@@ -3,11 +3,21 @@ package operations
 import (
     _ "github.com/lib/pq"
     "database/sql"
+    "encoding/xml"
 )
 
 type Budget struct {
-    Merchant string
-    Amount int64
+    XMLName xml.Name `xml:"response"`
+    OperationType string `xml:"type,attr"`
+    Merchant string `xml:"merchant"`
+    Amount int64 `xml:"amount"`
+}
+
+func (b Budget) XmlResponse() string {
+    b.OperationType = "budget"
+    output, _ := xml.Marshal(b)
+    output = append(output, '\n')
+    return string(output)
 }
 
 func (b *Budget) Calculate() (int64, error) {

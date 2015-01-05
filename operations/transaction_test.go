@@ -58,6 +58,14 @@ func (suite *TransactionTestSuite) TestSave() {
     suite.Equal(1, (finishValue - initialValue), "Count of records should be changed by 1")
 }
 
+func (suite *TransactionTestSuite) TestXmlResponse() {
+    transaction := Transaction{Merchant: "10", OperationIdent: "asdf", Description: "Hello", Amount: 101}
+    answer := []byte(`<request type="transaction"><merchant>10</merchant><operation_ident>asdf</operation_ident><description>Hello</description><amount>101</amount><operation_created_at>0001-01-01T00:00:00Z</operation_created_at><OriginXml></OriginXml></request>`)
+    answer = append(answer, '\n')
+    suite.Equal(answer, transaction.XmlResponse(), "Wrong xml answer")
+}
+
+
 func TestTransactionSuite(t *testing.T) {
     suite.Run(t, new(TransactionTestSuite))
 }

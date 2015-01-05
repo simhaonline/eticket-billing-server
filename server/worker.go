@@ -37,16 +37,16 @@ func (w Worker) Serve() {
             switch req.OperationType {
             case "budget":
                 budget := operations.Budget{Merchant: w.merchant}
-                amount, _ := budget.Calculate()
-                amountResponse := strconv.AppendInt(make([]byte, 0), amount, 10)
-                amountResponse = append(amountResponse, '\n')
-                req.Conn.Write(amountResponse)
+                budget.Calculate()
+                answer := []byte(budget.XmlResponse())
+                req.Conn.Write(answer)
             case "transaction":
                 // TODO check budget
                 transaction := operations.NewTransaction(req.XmlBody)
                 if transaction.IsPossible() {
-                    req.Conn.Write([]byte("OK\n"))
                     transaction.Save()
+                    answer := []byte(transaction.XmlResponse())
+                    req.Conn.Write(answer)
                 } else {
                     req.Conn.Write([]byte("I have not enough money\n"))
                 }

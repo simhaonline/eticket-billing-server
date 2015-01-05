@@ -33,13 +33,14 @@ func (c customTime) Value() (driver.Value, error) {
 
 type Transaction struct {
     XMLName xml.Name `xml:"request"`
+    OperationType string `xml:"type,attr"`
     Merchant string `xml:"merchant"`
     OperationIdent string `xml:"operation_ident"`
     Description string `xml:"description"`
     Amount int64 `xml:"amount"`
 
     OperationCreatedAt customTime `xml:"operation_created_at"`
-    OriginXml string
+    OriginXml string `xml:",omitempty"`
 }
 
 func NewTransaction(data string) *Transaction {
@@ -76,7 +77,16 @@ func (r *Transaction) Save() (uint64, error) {
                          VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`,
         r.Merchant, r.OperationIdent, r.Description, r.Amount, r.OperationCreatedAt, r.OriginXml).Scan(&id)
 
+    // TODO handle duplication
     if ok != nil { panic(ok) }
 
     return id, nil
+}
+
+func (r Transaction) XmlResponse() string {
+    r.OperationType = "transaction"
+    r.OriginXml = ""
+    output, _ := xml.Marshal(r)
+    output = append(output, '\n')
+    return string(output)
 }
