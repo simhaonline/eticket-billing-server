@@ -9,18 +9,17 @@ import (
     "fmt"
 )
 
-type TestSuite struct {
+type TransactionTestSuite struct {
     suite.Suite
 }
 
-func (suite TestSuite) TearDownTest() {
+func (suite TransactionTestSuite) TearDownTest() {
     conn := NewConnection()
     _, ok := conn.Exec("truncate table operations")
     if ok != nil { panic(ok) }
 }
 
 var conn *sql.DB = NewConnection()
-
 
 func countRows() uint64 {
     var cnt uint64
@@ -38,7 +37,7 @@ var xmlData string = `
   <amount>%v</amount>
 </operation>`
 
-func (suite *TestSuite) TestNewRecord() {
+func (suite *TransactionTestSuite) TestNewRecord() {
     record := NewRecord(fmt.Sprintf(xmlData, 101, -12387))
 
     suite.Equal("*operations.Transaction", reflect.TypeOf(record).String(), "NewRecord should return new record composed from xml")
@@ -51,7 +50,7 @@ func (suite *TestSuite) TestNewRecord() {
     suite.Equal(ct, record.OperationCreatedAt)
 }
 
-func (suite *TestSuite) TestSave() {
+func (suite *TransactionTestSuite) TestSave() {
     initialValue := countRows()
     record := NewRecord(fmt.Sprintf(xmlData, 101, 100))
     record.Save()
@@ -59,19 +58,6 @@ func (suite *TestSuite) TestSave() {
     suite.Equal(1, (finishValue - initialValue), "Count of records should be changed by 1")
 }
 
-func (suite *TestSuite) TestCalculate() {
-    r1 := NewRecord(fmt.Sprintf(xmlData, 101, 20200))
-    r1.Save()
-    r2 := NewRecord(fmt.Sprintf(xmlData, 102, 33000))
-    r2.Save()
-
-    b := Budget{"11", 0}
-    result, _ := b.Calculate()
-
-    suite.Equal(53200, result, "Should calculate sum of amount")
-    suite.Equal(53200, b.Amount, "Should calculate sum of amount")
-}
-
-func TestExampleTestSuite(t *testing.T) {
-    suite.Run(t, new(TestSuite))
+func TestTransactionSuite(t *testing.T) {
+    suite.Run(t, new(TransactionTestSuite))
 }
