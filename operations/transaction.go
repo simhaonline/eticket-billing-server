@@ -1,11 +1,11 @@
-package billing
+package operations
 
 import (
     "time"
     "encoding/xml"
     "fmt"
     _ "github.com/lib/pq"
-    "database/sql"
+//    "database/sql"
     driver "database/sql/driver"
 )
 
@@ -31,7 +31,7 @@ func (c customTime) Value() (driver.Value, error) {
     return c.Time, nil
 }
 
-type Record struct {
+type Transaction struct {
     XMLName xml.Name `xml:"operation"`
     Merchant string `xml:"merchant"`
     OperationIdent string `xml:"operation_ident"`
@@ -42,13 +42,8 @@ type Record struct {
     OriginXml string
 }
 
-type Budget struct {
-    Merchant string
-    Amount int64
-}
-
-func NewRecord(data string) *Record {
-    r := Record{}
+func NewRecord(data string) *Transaction {
+    r := Transaction{}
     err := xml.Unmarshal([]byte(data), &r)
 
     if err != nil {
@@ -62,7 +57,7 @@ func NewRecord(data string) *Record {
     return &r
 }
 
-func (r *Record) Save() (uint64, error) {
+func (r *Transaction) Save() (uint64, error) {
     var id uint64
 
     conn := NewConnection()
@@ -73,21 +68,4 @@ func (r *Record) Save() (uint64, error) {
     if ok != nil { panic(ok) }
 
     return id, nil
-}
-
-func (b *Budget) Calculate() (int64, error) {
-    conn := NewConnection()
-
-    var amount sql.NullInt64
-
-    ok := conn.QueryRow("select sum(amount) from operations where merchant_id = $1", b.Merchant).Scan(&amount)
-    if ok != nil { panic(ok) }
-
-    if amount.Valid {
-        b.Amount = amount.Int64
-    } else {
-        b.Amount = 0
-    }
-
-    return b.Amount, nil
 }

@@ -1,4 +1,4 @@
-package billing
+package operations
 
 import (
     _ "github.com/lib/pq"

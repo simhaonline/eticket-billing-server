@@ -1,4 +1,4 @@
-package billing
+package operations
 
 import (
     "testing"
@@ -41,7 +41,7 @@ var xmlData string = `
 func (suite *TestSuite) TestNewRecord() {
     record := NewRecord(fmt.Sprintf(xmlData, 101, -12387))
 
-    suite.Equal("*billing.Record", reflect.TypeOf(record).String(), "NewRecord should return new record composed from xml")
+    suite.Equal("*operations.Transaction", reflect.TypeOf(record).String(), "NewRecord should return new record composed from xml")
     suite.Equal("11", record.Merchant)
     suite.Equal("101", record.OperationIdent)
     suite.Equal("Charge", record.Description)

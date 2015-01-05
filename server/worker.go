@@ -5,7 +5,7 @@ import (
     "fmt"
     "os"
     "strconv"
-    "eticket-billing/billing"
+    "eticket-billing/operations"
 )
 
 type Worker struct {
@@ -34,18 +34,18 @@ func (w Worker) Serve() {
     for {
         select {
         case req = <- w.inputChan:
-            // TODO hold closed connection http://stackoverflow.com/questions/12741386/how-to-know-tcp-connection-is-closed-in-golang-net-package
-            // Info.Printf("Worker of merchant %v received string '%v'", w.merchant, req.body)
-            // w.logger.Println(req.body)
+            switch req.OperationType {
+            case "budget":
+                budget := operations.Budget{Merchant: w.merchant}
+                amount, _ := budget.Calculate()
+                amountResponse := strconv.AppendInt(make([]byte, 0), amount, 10)
+                amountResponse = append(amountResponse, '\n')
+                req.Conn.Write(amountResponse)
+            default:
+                req.Conn.Write([]byte("I have no idea what to do\n"))
+            }
 
-            budget := billing.Budget{Merchant: w.merchant}
-            amount, _ := budget.Calculate()
-
-            amountResponse := strconv.AppendInt(make([]byte, 0), amount, 10)
-            amountResponse = append(amountResponse, '\n')
-            req.connection.Write(amountResponse)
-
-            req.connection.Close()
+            req.Conn.Close()
         case <- w.quitChan:
             Info.Println("Wroker for %v quitting", w.merchant)
             return

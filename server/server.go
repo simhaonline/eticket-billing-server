@@ -4,7 +4,6 @@ import (
     "log"
     "net"
     "os"
-    "strings"
     "bufio"
 )
 
@@ -51,27 +50,16 @@ func Serve() {
             }
         }
 
-        // TODO sanitize string
-        params := strings.Split(input, " ")
+        request := NewRequest(input)
+        request.Conn = conn
 
-        if params[0] != "I'm" {
-            conn.Write([]byte("Wrong input\n"))
-            conn.Close()
-        } else {
-            // TODO check params[1]
-            merchant := params[1]
+        Info.Println(input)
 
-            _, err = conn.Write([]byte("Hi " + params[1] + "\n"))
-            if err != nil { panic(err) }
+        IncomeRequestsLog.Println(input)
 
-            Info.Println(input)
+        pool := NewWorkersPool()
 
-            IncomeRequestsLog.Println(input)
-
-            pool := NewWorkersPool()
-
-            worker := pool.GetWorkerForMerchant(merchant)
-            worker.inputChan <- &Request{conn, merchant}
-        }
+        worker := pool.GetWorkerForMerchant(request.Merchant)
+        worker.inputChan <- request
     }
 }
