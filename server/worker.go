@@ -39,7 +39,6 @@ func (w Worker) Serve() {
                 req.Performer(func(req *Request) {
                     budget := operations.Budget{Merchant: w.merchant}
                     budget.Calculate()
-                    panic("testing...")
                     answer := []byte(budget.XmlResponse())
                     req.Conn.Write(answer)
                 })
