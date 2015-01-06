@@ -13,11 +13,18 @@ type TransactionTestSuite struct {
     suite.Suite
 }
 
+func (suite TransactionTestSuite) SetupTest() {
+    conn := NewConnection()
+    _, ok := conn.Exec("truncate table operations")
+    if ok != nil { panic(ok) }
+}
+
 func (suite TransactionTestSuite) TearDownTest() {
     conn := NewConnection()
     _, ok := conn.Exec("truncate table operations")
     if ok != nil { panic(ok) }
 }
+
 
 var conn *sql.DB = NewConnection()
 
@@ -58,11 +65,24 @@ func (suite *TransactionTestSuite) TestSave() {
     suite.Equal(1, (finishValue - initialValue), "Count of records should be changed by 1")
 }
 
+func (suite *TransactionTestSuite) TestDuplicationOfRecords() {
+    initialValue := countRows()
+    r := NewTransaction(fmt.Sprintf(xmlData, 101, 12387))
+    r.Save()
+    r = NewTransaction(fmt.Sprintf(xmlData, 101, 12387))
+    _, err := r.Save()
+    finishValue := countRows()
+
+    suite.NotNil(err)
+    suite.Equal(0, int(initialValue), "First must be 1")
+    suite.Equal(1, int(finishValue), "Result must be 1")
+}
+
 func (suite *TransactionTestSuite) TestXmlResponse() {
     transaction := Transaction{Merchant: "10", OperationIdent: "asdf", Description: "Hello", Amount: 101}
-    answer := []byte(`<request type="transaction"><merchant>10</merchant><operation_ident>asdf</operation_ident><description>Hello</description><amount>101</amount><operation_created_at>0001-01-01T00:00:00Z</operation_created_at><OriginXml></OriginXml></request>`)
+    answer := []byte(`<answer type="transaction"><merchant>10</merchant><operation_ident>asdf</operation_ident><description>Hello</description><amount>101</amount><operation_created_at>0001-01-01T00:00:00Z</operation_created_at></answer>`)
     answer = append(answer, '\n')
-    suite.Equal(answer, transaction.XmlResponse(), "Wrong xml answer")
+    suite.Equal(string(answer), transaction.XmlResponse(), "Wrong xml answer")
 }
 
 

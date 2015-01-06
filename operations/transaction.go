@@ -4,9 +4,10 @@ import (
     "time"
     "encoding/xml"
     "fmt"
-    _ "github.com/lib/pq"
+    pq "github.com/lib/pq"
 //    "database/sql"
     driver "database/sql/driver"
+//    "strings"
 )
 
 const (
@@ -77,16 +78,26 @@ func (r *Transaction) Save() (uint64, error) {
                          VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`,
         r.Merchant, r.OperationIdent, r.Description, r.Amount, r.OperationCreatedAt, r.OriginXml).Scan(&id)
 
-    // TODO handle duplication
-    if ok != nil { panic(ok) }
 
-    return id, nil
+    if err, ok := ok.(*pq.Error); ok {
+        if "unique_violation" == err.Code.Name() {
+            fmt.Println("Duplication warning")
+        } else {
+            panic(err)
+        }
+    }
+    return id, ok
 }
 
 func (r Transaction) XmlResponse() string {
-    r.OperationType = "transaction"
-    r.OriginXml = ""
-    output, _ := xml.Marshal(r)
+    tmp := struct {
+        Transaction
+        XMLName xml.Name `xml:"answer"`
+    }{Transaction: r}
+
+    tmp.OperationType = "transaction"
+    tmp.OriginXml = ""
+    output, _ := xml.Marshal(tmp)
     output = append(output, '\n')
     return string(output)
 }

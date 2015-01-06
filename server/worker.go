@@ -36,26 +36,28 @@ func (w Worker) Serve() {
         case req = <- w.inputChan:
             switch req.OperationType {
             case "budget":
-                budget := operations.Budget{Merchant: w.merchant}
-                budget.Calculate()
-                answer := []byte(budget.XmlResponse())
-                req.Conn.Write(answer)
-            case "transaction":
-                // TODO check budget
-                transaction := operations.NewTransaction(req.XmlBody)
-                if transaction.IsPossible() {
-                    transaction.Save()
-                    answer := []byte(transaction.XmlResponse())
+                req.Performer(func(req *Request) {
+                    budget := operations.Budget{Merchant: w.merchant}
+                    budget.Calculate()
+                    panic("testing...")
+                    answer := []byte(budget.XmlResponse())
                     req.Conn.Write(answer)
-                } else {
-                    req.Conn.Write([]byte("I have not enough money\n"))
-                }
-
+                })
+            case "transaction":
+                req.Performer(func(req *Request) {
+                    transaction := operations.NewTransaction(req.XmlBody)
+                    if transaction.IsPossible() {
+                        transaction.Save()
+                        answer := []byte(transaction.XmlResponse())
+                        req.Conn.Write(answer)
+                    } else {
+                        req.Conn.Write([]byte("I have not enough money\n"))
+                    }
+                })
             default:
                 req.Conn.Write([]byte("I have no idea what to do\n"))
+                req.Conn.Close()
             }
-
-            req.Conn.Close()
         case <- w.quitChan:
             Info.Println("Wroker for %v quitting", w.merchant)
             return

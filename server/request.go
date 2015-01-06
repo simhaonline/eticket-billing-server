@@ -3,6 +3,8 @@ package server
 import (
     "net"
     "encoding/xml"
+    "runtime"
+    "fmt"
 )
 
 type Request struct {
@@ -22,4 +24,17 @@ func NewRequest(xmlData string) *Request {
     r.XmlBody = xmlData
 
     return r
+}
+
+func (req *Request) Performer(fnc func(r *Request)) {
+    defer func() {
+        if err := recover(); err != nil {
+            trace := make([]byte, 1024)
+            count := runtime.Stack(trace, true)
+            fmt.Printf("Recover from panic: %s\n", err)
+            fmt.Printf("Stack of %d bytes: %s\n", count, trace)
+        }
+    }()
+    defer req.Conn.Close()
+    fnc(req)
 }
