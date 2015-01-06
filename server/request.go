@@ -26,7 +26,7 @@ func NewRequest(xmlData string) *Request {
     return r
 }
 
-func (req *Request) Performer(fnc func(r *Request)) {
+func (req *Request) Performer(fnc func(r *Request) string) {
     defer func() {
         if err := recover(); err != nil {
             trace := make([]byte, 1024)
@@ -36,5 +36,6 @@ func (req *Request) Performer(fnc func(r *Request)) {
         }
     }()
     defer req.Conn.Close()
-    fnc(req)
+    xmlString := fnc(req)
+    req.Conn.Write([]byte(xmlString))
 }

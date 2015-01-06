@@ -22,6 +22,7 @@ func (b Budget) XmlResponse() string {
 
 func (b *Budget) Calculate() (int64, error) {
     conn := NewConnection()
+    defer conn.Close()
 
     var amount sql.NullInt64
 

@@ -5,9 +5,7 @@ import (
     "encoding/xml"
     "fmt"
     pq "github.com/lib/pq"
-//    "database/sql"
     driver "database/sql/driver"
-//    "strings"
 )
 
 const (
@@ -16,6 +14,15 @@ const (
 
 type customTime struct {
     time.Time
+}
+
+type TransactionError struct {
+    Message string
+    Code string
+}
+
+func (t *TransactionError) Error() string {
+    return fmt.Sprintf("%v: %v", t.Code, t.Message)
 }
 
 // SEE http://play.golang.org/p/EFXZNsjE4a and
@@ -61,7 +68,6 @@ func NewTransaction(data string) *Transaction {
 
 func (r *Transaction) IsPossible() bool {
     budget := Budget{Merchant: r.Merchant}
-    // TODO handle or remove error
     amount, _ := budget.Calculate()
     if r.Amount > 0 {
         return true
@@ -73,20 +79,25 @@ func (r *Transaction) IsPossible() bool {
 func (r *Transaction) Save() (uint64, error) {
     var id uint64
 
-    conn := NewConnection()
-    ok := conn.QueryRow(`INSERT INTO operations (merchant_id, operation_ident, description, amount, operation_created_at, xml_data)
+    if !r.IsPossible() {
+        return 0, &TransactionError{Code: "not_enough_money", Message: "Not enough money for operation"}
+    } else {
+        conn := NewConnection()
+        defer conn.Close()
+        ok := conn.QueryRow(`INSERT INTO operations (merchant_id, operation_ident, description, amount, operation_created_at, xml_data)
                          VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`,
-        r.Merchant, r.OperationIdent, r.Description, r.Amount, r.OperationCreatedAt, r.OriginXml).Scan(&id)
+            r.Merchant, r.OperationIdent, r.Description, r.Amount, r.OperationCreatedAt, r.OriginXml).Scan(&id)
 
-
-    if err, ok := ok.(*pq.Error); ok {
-        if "unique_violation" == err.Code.Name() {
-            fmt.Println("Duplication warning")
-        } else {
-            panic(err)
+        if err, ok := ok.(*pq.Error); ok {
+            if "unique_violation" == err.Code.Name() {
+                fmt.Println("Duplication warning")
+                return 0, &TransactionError{Code: "duplication", Message: "Duplication of operation"}
+            } else {
+                panic(err)
+            }
         }
+        return id, nil
     }
-    return id, ok
 }
 
 func (r Transaction) XmlResponse() string {
@@ -94,6 +105,26 @@ func (r Transaction) XmlResponse() string {
         Transaction
         XMLName xml.Name `xml:"answer"`
     }{Transaction: r}
+
+    tmp.OperationType = "transaction"
+    tmp.OriginXml = ""
+    output, _ := xml.Marshal(tmp)
+    output = append(output, '\n')
+    return string(output)
+}
+
+func (r Transaction) ErrorXmlResponse(err error) string {
+    error := err.(*TransactionError)
+
+    tmp := struct {
+        XMLName xml.Name `xml:"answer"`
+        ErrorMessage string `xml:"error>message"`
+        ErrorCode string `xml:"error>code"`
+        Transaction
+    }{Transaction: r}
+
+    tmp.ErrorMessage = error.Message
+    tmp.ErrorCode = error.Code
 
     tmp.OperationType = "transaction"
     tmp.OriginXml = ""

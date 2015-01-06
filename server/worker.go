@@ -36,21 +36,18 @@ func (w Worker) Serve() {
         case req = <- w.inputChan:
             switch req.OperationType {
             case "budget":
-                req.Performer(func(req *Request) {
+                req.Performer(func(req *Request) string {
                     budget := operations.Budget{Merchant: w.merchant}
                     budget.Calculate()
-                    answer := []byte(budget.XmlResponse())
-                    req.Conn.Write(answer)
+                    return budget.XmlResponse()
                 })
             case "transaction":
-                req.Performer(func(req *Request) {
+                req.Performer(func(req *Request) string {
                     transaction := operations.NewTransaction(req.XmlBody)
-                    if transaction.IsPossible() {
-                        transaction.Save()
-                        answer := []byte(transaction.XmlResponse())
-                        req.Conn.Write(answer)
+                    if _, err := transaction.Save(); err != nil {
+                        return transaction.ErrorXmlResponse(err)
                     } else {
-                        req.Conn.Write([]byte("I have not enough money\n"))
+                        return transaction.XmlResponse()
                     }
                 })
             default:
