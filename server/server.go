@@ -4,7 +4,10 @@ import (
     "log"
     "net"
     "os"
-    "bufio"
+    "fmt"
+    "io"
+    "strings"
+    "bytes"
 )
 
 var (
@@ -41,14 +44,18 @@ func Serve() {
             Error.Println(err)
         }
 
-        connbuf := bufio.NewReader(conn)
-        var input string
-        for {
-            input, err = connbuf.ReadString('\n')
-            if err!= nil {
-                break
-            }
-        }
+        buf := make([]byte, 1024)
+        _, err = conn.Read(buf)
+        if err != nil && err != io.EOF { panic(err) }
+
+        buf = bytes.Trim(buf, "\x00")
+
+        if len(buf) == 0 { continue }
+
+        input := string(buf)
+        input = strings.TrimSpace(input)
+
+        fmt.Printf("%q+", input)
 
         request := NewRequest(input)
         request.Conn = conn
