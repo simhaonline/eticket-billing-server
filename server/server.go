@@ -7,6 +7,7 @@ import (
     "io"
     "strings"
     "bytes"
+    "time"
     glog "github.com/golang/glog"
 )
 
@@ -15,6 +16,7 @@ var (
 )
 
 type Server struct {
+    stopChan chan bool
     requestLog *os.File
 }
 
@@ -22,7 +24,7 @@ func NewServer(inputRequestLogPath string) *Server {
     f, ok := os.OpenFile(inputRequestLogPath + "/requests.log", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0666)
     if ok != nil { panic(ok) }
 
-    s := Server{f}
+    s := Server{make(chan bool), f}
     return &s
 }
 
@@ -37,16 +39,32 @@ func (s Server) logRequest(req string) {
 func (s *Server) Serve() {
     glog.Info("Ready")
 
-    l, err := net.Listen("tcp", ":2000")
+    laddr, err := net.ResolveTCPAddr("tcp", "127.0.0.1:2000")
+    if nil != err {
+        glog.Fatal(err)
+    }
+
+    l, err := net.ListenTCP("tcp", laddr)
     if err != nil {
         glog.Fatal(err)
     }
     defer l.Close()
 
     for {
-        conn, err := l.Accept()
-        if err != nil {
-            glog.Fatal(err)
+        select {
+        case <-s.stopChan:
+            glog.Info("Stopping server. Closing Connection...")
+            break
+        default:
+        }
+
+        l.SetDeadline(time.Now().Add(1e9))
+        conn, err := l.AcceptTCP()
+        if nil != err {
+            if opErr, ok := err.(*net.OpError); ok && opErr.Timeout() {
+                continue
+            }
+            glog.Info(err)
         }
 
         buf := make([]byte, 1024)
@@ -74,4 +92,17 @@ func (s *Server) Serve() {
         worker := pool.GetWorkerForMerchant(request.Merchant)
         worker.inputChan <- request
     }
+}
+
+func (s *Server) Stop() {
+    glog.Info("Attempting to stop everything")
+    s.stopChan <- true
+    close(s.stopChan)
+    s.requestLog.Close()
+
+    pool := NewWorkersPool()
+    pool.StopAll()
+
+    glog.Info("Server is stopped")
+    glog.Flush()
 }

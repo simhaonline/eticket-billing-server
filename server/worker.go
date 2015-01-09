@@ -17,7 +17,7 @@ type Worker struct {
 
 func newWorker(merchant string, filePrefix string) *Worker {
     m, _ := strconv.Atoi(merchant)
-    fileName := fmt.Sprintf("%s/worker_%s.log", filePrefix, m)
+    fileName := fmt.Sprintf("%v/worker_%v.log", filePrefix, m)
 
     f, ok := os.OpenFile(fileName, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0666)
     if ok != nil {
@@ -74,8 +74,16 @@ func (w Worker) Serve() {
                 req.Conn.Close()
             }
         case <- w.quitChan:
-            glog.Info("Wroker %v quitting", w.merchant)
+            glog.Infof("Wroker %v quitting", w.merchant)
             return
         }
     }
+}
+
+func (w Worker) Stop() {
+    w.quitChan <- true
+    w.requestsLog.Close()
+    close(w.quitChan)
+    close(w.inputChan)
+    glog.Infof("Worker %v is stopped", w.merchant)
 }

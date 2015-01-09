@@ -2,6 +2,7 @@ package server
 
 import (
     "sync"
+    glog "github.com/golang/glog"
 )
 
 type WorkersPool []*Worker
@@ -35,6 +36,14 @@ func (wp *WorkersPool) GetWorkerForMerchant(merchant string) *Worker {
 func (wp *WorkersPool) appendWorker(worker *Worker) {
     mutex.Lock()
     workersPoolInstance = append(*wp, worker)
+    mutex.Unlock()
+}
+
+func (wp *WorkersPool) StopAll() {
+    mutex.Lock()
+    for i := 0; i < len(workersPoolInstance); i++ {
+        ((*wp)[i]).Stop()
+    }
     mutex.Unlock()
 }
 
