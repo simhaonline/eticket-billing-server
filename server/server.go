@@ -1,47 +1,52 @@
 package server
 
 import (
-    "log"
     "net"
     "os"
     "fmt"
     "io"
     "strings"
     "bytes"
+    glog "github.com/golang/glog"
 )
 
 var (
-    Info *log.Logger
-    Error *log.Logger
-    IncomeRequestsLog *log.Logger
     listOfWorkers = make([]*Worker, 0)
 )
 
-
-func init() {
-    Info = log.New(os.Stdout, "INFO:", log.Ldate|log.Ltime|log.Lshortfile)
-    Error = log.New(os.Stderr, "ERROR:", log.Ldate|log.Ltime|log.Lshortfile)
-
-    f, ok := os.OpenFile("/tmp/income_requests.log", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0666)
-    if ok != nil { panic(ok) }
-
-//	defer f.Close() TODO how to close it? Where?
-
-    IncomeRequestsLog = log.New(f, "", log.Ldate|log.Ltime)
+type Server struct {
+    requestLog *os.File
 }
 
-func Serve() {
-    Info.Println("Ready")
+func NewServer(inputRequestLogPath string) *Server {
+    f, ok := os.OpenFile(inputRequestLogPath + "/requests.log", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0666)
+    if ok != nil { panic(ok) }
+
+    s := Server{f}
+    return &s
+}
+
+func (s Server) logRequest(req string) {
+    _, err := s.requestLog.WriteString(req + "\n")
+    if err != nil {
+        glog.Fatal(err)
+        panic(err)
+    }
+}
+
+func (s *Server) Serve() {
+    glog.Info("Ready")
+
     l, err := net.Listen("tcp", ":2000")
     if err != nil {
-        Error.Println(err)
+        glog.Fatal(err)
     }
     defer l.Close()
 
     for {
         conn, err := l.Accept()
         if err != nil {
-            Error.Println(err)
+            glog.Fatal(err)
         }
 
         buf := make([]byte, 1024)
@@ -60,9 +65,9 @@ func Serve() {
         request := NewRequest(input)
         request.Conn = conn
 
-        Info.Println(input)
+        glog.Info(input)
 
-        IncomeRequestsLog.Println(input)
+        s.logRequest(input)
 
         pool := NewWorkersPool()
 
