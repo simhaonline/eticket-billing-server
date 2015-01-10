@@ -3,7 +3,6 @@ package server
 import (
     "net"
     "os"
-    "fmt"
     "io"
     "strings"
     "bytes"
@@ -85,8 +84,6 @@ func (s *Server) Serve() {
 
         input := string(buf)
         input = strings.TrimSpace(input)
-
-        fmt.Printf("%q+", input)
 
         request := NewRequest(input)
         request.Conn = conn

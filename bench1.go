@@ -1,3 +1,5 @@
+// +build helpprog
+
 package main
 
 import (
