@@ -11,7 +11,10 @@ var workersPoolInstance WorkersPool
 
 var mutex = sync.Mutex{}
 
-func NewWorkersPool() *WorkersPool {
+var config *Config
+
+func GetWorkersPool(cnf *Config) *WorkersPool {
+    config = cnf
     if workersPoolInstance == nil {
         workersPoolInstance = make(WorkersPool, 0)
     }
@@ -23,7 +26,7 @@ func (wp *WorkersPool) GetWorkerForMerchant(merchant string) *Worker {
     pos := wp.workerPosition(merchant)
 
     if -1 == pos {
-        worker := newWorker(merchant, "/tmp")
+        worker := newWorker(merchant, config.RequestLogDir)
         wp.appendWorker(worker)
 
         pos = wp.workerPosition(merchant)

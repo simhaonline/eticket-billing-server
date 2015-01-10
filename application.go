@@ -8,12 +8,17 @@ import (
     "os/signal"
     "syscall"
     "path/filepath"
+    "runtime"
 )
 
+var config *server.Config
+
 func main() {
+    runtime.GOMAXPROCS(runtime.NumCPU())
+
     defer glog.Flush()
 
-    config := server.NewConfig()
+    config = server.NewConfig()
 
     waitForStop := make(chan bool, 1)
 

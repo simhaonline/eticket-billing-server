@@ -95,7 +95,7 @@ func (s *Server) Serve() {
 
         s.logRequest(input)
 
-        pool := NewWorkersPool()
+        pool := GetWorkersPool(s.config)
 
         worker := pool.GetWorkerForMerchant(request.Merchant)
         worker.inputChan <- request
@@ -111,7 +111,7 @@ func (s *Server) Stop(stChan chan bool) {
     glog.V(2).Info("Closed servers files and chans")
     glog.Flush()
 
-    pool := NewWorkersPool()
+    pool := GetWorkersPool(s.config)
     pool.StopAll()
 
     glog.Info("Server is stopped")
