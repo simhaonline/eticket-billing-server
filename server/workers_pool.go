@@ -41,8 +41,12 @@ func (wp *WorkersPool) appendWorker(worker *Worker) {
 
 func (wp *WorkersPool) StopAll() {
     mutex.Lock()
+    // TODO iterate from last and remove it from array
+    glog.V(2).Infof("Found %v workers", len(workersPoolInstance))
     for i := 0; i < len(workersPoolInstance); i++ {
-        ((*wp)[i]).Stop()
+        worker := (*wp)[i]
+        glog.V(2).Infof("Stopping Worker[%v]..", worker.merchant)
+        worker.Stop()
     }
     mutex.Unlock()
 }

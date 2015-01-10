@@ -7,25 +7,47 @@ import (
     "os"
     "os/signal"
     "syscall"
-    "fmt"
-    "time"
+    "path/filepath"
 )
 
 func main() {
-    flag.Parse()
     defer glog.Flush()
 
-    server := server.NewServer("/tmp/")
+    config := server.NewConfig()
+
+    waitForStop := make(chan bool, 1)
+
+    flag.StringVar(&config.Environment, "environment", "development", "Setup environemnt: production, development")
+    flag.StringVar(&config.RequestLogDir, "request-log-dir", "", "Place where to store requests log files")
+    flag.Parse()
+
+    if config.RequestLogDir == "" {
+        dir, err := filepath.Abs(filepath.Dir(os.Args[0]))
+        if err != nil {
+            glog.Fatal(err)
+            os.Exit(1)
+        }
+
+        config.RequestLogDir = dir
+        glog.Info("Use current directory as root for storing log files")
+    }
+
+    config.DataBaseName = "" + config.Environment
+
+    server := server.NewServer(config)
+    glog.Flush()
     go server.Serve()
 
     signalChan := make(chan os.Signal)
     signal.Notify(signalChan, syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP, syscall.SIGQUIT)
 
-    fmt.Println(<-signalChan)
-    server.Stop()
+    signal := <-signalChan
 
-    glog.Info("EXIT")
+    glog.V(2).Infof("Received %v signal. Stopping...", signal)
     glog.Flush()
-    time.Sleep(100 * time.Millisecond)
-    os.Exit(0)
+
+    server.Stop(waitForStop)
+
+    <-waitForStop
+    glog.Info("EXIT")
 }

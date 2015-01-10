@@ -85,5 +85,6 @@ func (w Worker) Stop() {
     w.requestsLog.Close()
     close(w.quitChan)
     close(w.inputChan)
-    glog.Infof("Worker %v is stopped", w.merchant)
+    glog.V(2).Infof("Worker[%v] is stopped", w.merchant)
+    glog.Flush()
 }

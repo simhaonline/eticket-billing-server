@@ -18,13 +18,14 @@ var (
 type Server struct {
     stopChan chan bool
     requestLog *os.File
+    config *Config
 }
 
-func NewServer(inputRequestLogPath string) *Server {
-    f, ok := os.OpenFile(inputRequestLogPath + "/requests.log", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0666)
+func NewServer(config *Config) *Server {
+    f, ok := os.OpenFile(config.RequestLogDir + "/requests.log", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0666)
     if ok != nil { panic(ok) }
 
-    s := Server{make(chan bool), f}
+    s := Server{stopChan: make(chan bool), requestLog: f, config: config}
     return &s
 }
 
@@ -53,11 +54,12 @@ func (s *Server) Serve() {
     for {
         select {
         case <-s.stopChan:
-            glog.Info("Stopping server. Closing Connection...")
-            break
+            glog.Info("Breaking listening loop. Closing Connection...")
+            glog.Flush()
+            return
         default:
-        }
 
+        }
         l.SetDeadline(time.Now().Add(1e9))
         conn, err := l.AcceptTCP()
         if nil != err {
@@ -67,9 +69,15 @@ func (s *Server) Serve() {
             glog.Info(err)
         }
 
+        conn.SetDeadline(time.Now().Add(1e9))
         buf := make([]byte, 1024)
-        _, err = conn.Read(buf)
-        if err != nil && err != io.EOF { panic(err) }
+        if _, err := conn.Read(buf); nil != err && err != io.EOF {
+            if opErr, ok := err.(*net.OpError); ok && opErr.Timeout()  {
+                continue
+            }
+            glog.Fatal(err)
+            return
+        }
 
         buf = bytes.Trim(buf, "\x00")
 
@@ -94,15 +102,20 @@ func (s *Server) Serve() {
     }
 }
 
-func (s *Server) Stop() {
+func (s *Server) Stop(stChan chan bool) {
     glog.Info("Attempting to stop everything")
     s.stopChan <- true
     close(s.stopChan)
     s.requestLog.Close()
+
+    glog.V(2).Info("Closed servers files and chans")
+    glog.Flush()
 
     pool := NewWorkersPool()
     pool.StopAll()
 
     glog.Info("Server is stopped")
     glog.Flush()
+
+    stChan <- true
 }
