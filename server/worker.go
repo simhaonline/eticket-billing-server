@@ -37,14 +37,14 @@ func (w Worker) logRequest(req string) {
 }
 
 func (w Worker) Serve() {
-    glog.Info("New worker for merchant %v is spawned", w.merchant)
+    glog.Info("New Worker[%v] is spawned", w.merchant)
 
     var req *Request
     for {
         select {
         case req = <- w.inputChan:
             w.logRequest(req.XmlBody)
-            glog.Infof("Worker %v received income request %v", w.merchant, req.XmlBody)
+            glog.Infof("Worker[%v] received income request %v", w.merchant, req.XmlBody)
 
             switch req.OperationType {
             case "budget":
@@ -60,16 +60,16 @@ func (w Worker) Serve() {
                     transaction := operations.NewTransaction(req.XmlBody)
                     if _, err := transaction.Save(); err != nil {
                         response := transaction.ErrorXmlResponse(err)
-                        glog.Infof("Worker %v answering with %v", w.merchant, response)
+                        glog.Infof("Worker[%v] answering with %v", w.merchant, response)
                         return response
                     } else {
                         response := transaction.XmlResponse()
-                        glog.Infof("Worker %v answering with %v", w.merchant, response)
+                        glog.Infof("Worker[%v] answering with %v", w.merchant, response)
                         return response
                     }
                 })
             default:
-                glog.Errorf("Worker %v received unexpected request %v", w.merchant, req.XmlBody)
+                glog.Errorf("Worker[%v] received unexpected request %v", w.merchant, req.XmlBody)
                 req.Conn.Write([]byte("I have no idea what to do\n"))
                 req.Conn.Close()
             }

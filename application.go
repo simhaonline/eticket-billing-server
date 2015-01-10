@@ -29,12 +29,13 @@ func main() {
         }
 
         config.RequestLogDir = dir
-        glog.Info("Use current directory as root for storing log files")
+        glog.Infof("Use directory `%v' as root for storing log files", dir)
     }
 
-    config.DataBaseName = "" + config.Environment
+    config.DataBaseName = "eticket_billing_" + config.Environment
 
     server := server.NewServer(config)
+    glog.Infof("New Server is starting with configuration %+v", config)
     glog.Flush()
     go server.Serve()
 
