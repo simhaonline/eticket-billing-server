@@ -7,7 +7,8 @@ import (
     "strings"
     "bytes"
     "time"
-    glog "github.com/golang/glog"
+    "github.com/golang/glog"
+    "eticket-billing/config"
 )
 
 var (
@@ -17,10 +18,10 @@ var (
 type Server struct {
     stopChan chan bool
     requestLog *os.File
-    config *Config
+    config *config.Config
 }
 
-func NewServer(config *Config) *Server {
+func NewServer(config *config.Config) *Server {
     f, ok := os.OpenFile(config.RequestLogDir + "/requests.log", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0666)
     if ok != nil { panic(ok) }
 
@@ -92,7 +93,7 @@ func (s *Server) Serve() {
 
         s.logRequest(input)
 
-        pool := GetWorkersPool(s.config)
+        pool := GetWorkersPool()
 
         worker := pool.GetWorkerForMerchant(request.Merchant)
         worker.inputChan <- request
@@ -108,7 +109,7 @@ func (s *Server) Stop(stChan chan bool) {
     glog.V(2).Info("Closed servers files and chans")
     glog.Flush()
 
-    pool := GetWorkersPool(s.config)
+    pool := GetWorkersPool()
     pool.StopAll()
 
     glog.Info("Server is stopped")

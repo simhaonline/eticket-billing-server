@@ -52,7 +52,7 @@ func (w Worker) Serve() {
                     budget := operations.Budget{Merchant: w.merchant}
                     budget.Calculate()
                     response := budget.XmlResponse()
-                    glog.Infof("Worker %v answering with %v", w.merchant, response)
+                    glog.Infof("Worker[%v] answering with %v", w.merchant, response)
                     return response
                 })
             case "transaction":

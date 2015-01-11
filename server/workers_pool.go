@@ -3,6 +3,7 @@ package server
 import (
     "sync"
     glog "github.com/golang/glog"
+    "eticket-billing/config"
 )
 
 type WorkersPool []*Worker
@@ -11,10 +12,7 @@ var workersPoolInstance WorkersPool
 
 var mutex = sync.Mutex{}
 
-var config *Config
-
-func GetWorkersPool(cnf *Config) *WorkersPool {
-    config = cnf
+func GetWorkersPool() *WorkersPool {
     if workersPoolInstance == nil {
         workersPoolInstance = make(WorkersPool, 0)
     }
@@ -26,6 +24,7 @@ func (wp *WorkersPool) GetWorkerForMerchant(merchant string) *Worker {
     pos := wp.workerPosition(merchant)
 
     if -1 == pos {
+        config := config.GetConfig()
         worker := newWorker(merchant, config.RequestLogDir)
         wp.appendWorker(worker)
 
@@ -48,7 +47,7 @@ func (wp *WorkersPool) StopAll() {
     glog.V(2).Infof("Found %v workers", len(workersPoolInstance))
     for i := 0; i < len(workersPoolInstance); i++ {
         worker := (*wp)[i]
-        glog.V(2).Infof("Stopping Worker[%v]..", worker.merchant)
+        glog.V(2).Infof("Stopping Worker[%v]...", worker.merchant)
         worker.Stop()
     }
     mutex.Unlock()

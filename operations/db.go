@@ -3,6 +3,8 @@ package operations
 import (
     _ "github.com/lib/pq"
     "database/sql"
+    "eticket-billing/config"
+    "fmt"
 )
 
 /*
@@ -21,8 +23,11 @@ create table operations (
 */
 
 func NewConnection() *sql.DB {
-    // TODO move connection's params to config file
-    db, ok := sql.Open("postgres", "user=ignar dbname=eticket_billing sslmode=disable")
+    config := config.GetConfig()
+
+    connectionString := fmt.Sprintf("user=%v dbname=%v sslmode=disable", config.DatabaseUser, config.DatabaseName)
+
+    db, ok := sql.Open("postgres", connectionString)
     if ok != nil { panic (ok) }
 
     err := db.Ping()
