@@ -11,7 +11,7 @@ import (
 create table operations (
   id serial primary key,
   merchant_id varchar(20),
-  operation_ident varchar(20),
+  operation_ident varchar(100),
   description text,
   amount integer,
   xml_data xml,
