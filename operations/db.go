@@ -18,7 +18,7 @@ create table operations (
   operation_created_at timestamp without time zone,
   created_at timestamp without time zone default now(),
   updated_at timestamp without time zone,
-  UNIQUE (merchant_id, operation_ident)
+  UNIQUE (operation_ident)
 )
 */
 
