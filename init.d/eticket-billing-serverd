@@ -2,18 +2,12 @@
 #
 # chkconfig: - 55 45
 # description:
-# processname: eticket-billing
-# config: /etc/sysconfig/memcached
-# pidfile: /var/run/memcached/memcached.pid
-
-# Standard LSB functions
-#. /lib/lsb/init-functions
+# processname: eticket-billing-server
 
 # Source function library.
 . /etc/init.d/functions
 
 USER=eticket_billing_server
-OPTIONS="-v=2 -environment=production -alsologtostderr=true -config-file=/etc/eticket-billing-server/config.gcfg -log_dir=/var/log/eticket-billing-server/"
 
 # Check that networking is up.
 . /etc/sysconfig/network
@@ -24,21 +18,30 @@ then
 fi
 
 RETVAL=0
-prog="eticket-billing-server"
+prog="/usr/bin/eticket-billing-server"
 pidfile=${PIDFILE-/var/run/eticket-billing-server/eticket-billing-server.pid}
 lockfile=${LOCKFILE-/var/lock/subsys/eticket-billing-server}
 
+OPTIONS="-v=2 -environment=production -config-file=/etc/eticket-billing-server/config.gcfg -log_dir=/var/log/eticket-billing-server/ -pidfile=${pidfile}"
+
 start () {
         echo -n $"Starting $prog: "
+
         # Ensure that /var/run/eticket-billing-server has proper permissions
         if [ "`stat -c %U /var/run/eticket-billing-server`" != "$USER" ]; then
-                chown $USER /var/run/eticket-billing-server
+            chown $USER /var/run/eticket-billing-server
         fi
 
-        daemon --pidfile ${pidfile} /usr/bin/eticket-billing-server -pidfile=pidfile $OPTIONS
-        RETVAL=$?
-        echo
-        [ $RETVAL -eq 0 ] && touch ${lockfile}
+        if [ -f ${lockfile} ]; then
+            echo -n $"$prog is already running and has pid $(cat $pidfile)"
+            echo
+            RETVAL=1
+        else
+            daemon --pidfile ${pidfile} "nohup ${prog} $OPTIONS >/dev/null 2>&1 &"
+            RETVAL=$?
+            echo
+            [ $RETVAL -eq 0 ] && touch ${lockfile}
+        fi
 }
 stop () {
         echo -n $"Stopping $prog: "
