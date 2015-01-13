@@ -1,0 +1,80 @@
+#! /bin/sh
+#
+# chkconfig: - 55 45
+# description:
+# processname: eticket-billing
+# config: /etc/sysconfig/memcached
+# pidfile: /var/run/memcached/memcached.pid
+
+# Standard LSB functions
+#. /lib/lsb/init-functions
+
+# Source function library.
+. /etc/init.d/functions
+
+USER=eticket_billing_server
+OPTIONS="-v=2 -environment=production -alsologtostderr=true -config-file=/etc/eticket-billing-server/config.gcfg -log_dir=/var/log/eticket-billing-server/"
+
+# Check that networking is up.
+. /etc/sysconfig/network
+
+if [ "$NETWORKING" = "no" ]
+then
+        exit 0
+fi
+
+RETVAL=0
+prog="eticket-billing-server"
+pidfile=${PIDFILE-/var/run/eticket-billing-server/eticket-billing-server.pid}
+lockfile=${LOCKFILE-/var/lock/subsys/eticket-billing-server}
+
+start () {
+        echo -n $"Starting $prog: "
+        # Ensure that /var/run/eticket-billing-server has proper permissions
+        if [ "`stat -c %U /var/run/eticket-billing-server`" != "$USER" ]; then
+                chown $USER /var/run/eticket-billing-server
+        fi
+
+        daemon --pidfile ${pidfile} /usr/bin/eticket-billing-server -pidfile=pidfile $OPTIONS
+        RETVAL=$?
+        echo
+        [ $RETVAL -eq 0 ] && touch ${lockfile}
+}
+stop () {
+        echo -n $"Stopping $prog: "
+        killproc -p ${pidfile} /usr/bin/eticket-billing-server
+        RETVAL=$?
+        echo
+        if [ $RETVAL -eq 0 ] ; then
+                rm -f ${lockfile} ${pidfile}
+        fi
+}
+
+restart () {
+        stop
+        start
+}
+
+
+# See how we were called.
+case "$1" in
+  start)
+        start
+        ;;
+  stop)
+        stop
+        ;;
+  status)
+        status -p ${pidfile} memcached
+        RETVAL=$?
+        ;;
+  restart|reload|force-reload)
+        restart
+        ;;
+  *)
+        echo $"Usage: $0 {start|stop|status|restart|reload|force-reload|condrestart|try-restart}"
+        RETVAL=2
+        ;;
+esac
+
+exit $RETVAL

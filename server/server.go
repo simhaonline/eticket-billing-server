@@ -40,7 +40,7 @@ func (s Server) logRequest(req string) {
 func (s *Server) Serve() {
     glog.Info("Ready")
 
-    laddr, err := net.ResolveTCPAddr("tcp", "127.0.0.1:2000")
+    laddr, err := net.ResolveTCPAddr("tcp", ":2000")
     if nil != err {
         glog.Fatal(err)
     }

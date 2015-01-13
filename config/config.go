@@ -30,6 +30,7 @@ func ParseConfig(env string, configFile string) {
         panic (err)
     }
 
+    // TODO hold situation when there are no section for current env
     if cfg.Environment[currentEnvironment].RequestLogDir == "" {
         dir, err := filepath.Abs(filepath.Dir(os.Args[0]))
         if err != nil {

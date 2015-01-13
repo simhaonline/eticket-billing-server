@@ -1,5 +1,3 @@
-// +build main
-
 package main
 
 import (
@@ -11,6 +9,8 @@ import (
     "os/signal"
     "syscall"
     "runtime"
+    "io/ioutil"
+    "fmt"
 )
 
 func main() {
@@ -20,10 +20,21 @@ func main() {
 
     var environment string
     var configFile string
+    var pidfile string
 
     flag.StringVar(&environment, "environment", "", "Setup environment: production, development")
     flag.StringVar(&configFile, "config-file", "", "Configuration file")
+    flag.StringVar(&pidfile, "pidfile", "", "PID file")
     flag.Parse()
+
+    pid := syscall.Getpid()
+    glog.Info(pid)
+    spid := fmt.Sprintf("%v", pid)
+    err := ioutil.WriteFile(pidfile, []byte(spid), 0644)
+    if err != nil {
+        glog.Fatalf("Could not open pidfile. %v", err)
+        panic(err)
+    }
 
     config.ParseConfig(environment, configFile)
 

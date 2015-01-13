@@ -25,7 +25,7 @@ create table operations (
 func NewConnection() *sql.DB {
     config := config.GetConfig()
 
-    connectionString := fmt.Sprintf("user=%v dbname=%v sslmode=disable", config.DatabaseUser, config.DatabaseName)
+    connectionString := fmt.Sprintf("user=%v password=%v dbname=%v sslmode=disable", config.DatabaseUser, config.DatabasePassword, config.DatabaseName)
 
     db, ok := sql.Open("postgres", connectionString)
     if ok != nil { panic (ok) }
