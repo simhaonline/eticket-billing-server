@@ -1,5 +1,5 @@
 [environment "development"]
 database-name = "eticket_billing_server_development"
-database-user = ignar
-database-password =
+database-user = eticket_billing_server_user
+database-password = eticket_billing_server_user
 request-log-dir = "/Users/ignar/Development/gopher/src/eticket-billing/log"

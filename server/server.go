@@ -22,6 +22,7 @@ type Server struct {
 }
 
 func NewServer(config *config.Config) *Server {
+    // TODO check connection to DB
     f, ok := os.OpenFile(config.RequestLogDir + "/requests.log", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0666)
     if ok != nil { panic(ok) }
 
