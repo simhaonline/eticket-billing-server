@@ -3,7 +3,7 @@ package operations
 import (
     _ "github.com/lib/pq"
     "database/sql"
-    "eticket-billing/config"
+    "eticket-billing-server/config"
     "fmt"
 )
 

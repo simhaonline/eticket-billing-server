@@ -3,8 +3,8 @@ package main
 import (
     "github.com/golang/glog"
     "flag"
-    "eticket-billing/server"
-    "eticket-billing/config"
+    "eticket-billing-server/server"
+    "eticket-billing-server/config"
     "os"
     "os/signal"
     "syscall"

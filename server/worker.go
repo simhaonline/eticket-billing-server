@@ -5,7 +5,7 @@ import (
     "os"
     "strconv"
     glog "github.com/golang/glog"
-    "eticket-billing/operations"
+    "eticket-billing-server/operations"
 )
 
 type Worker struct {
@@ -58,6 +58,19 @@ func (w Worker) Serve() {
             case "transaction":
                 req.Performer(func(req *Request) string {
                     transaction := operations.NewTransaction(req.XmlBody)
+                    if _, err := transaction.Save(); err != nil {
+                        response := transaction.ErrorXmlResponse(err)
+                        glog.Infof("Worker[%v] answering with %v", w.merchant, response)
+                        return response
+                    } else {
+                        response := transaction.XmlResponse()
+                        glog.Infof("Worker[%v] answering with %v", w.merchant, response)
+                        return response
+                    }
+                })
+            case "transaction-without-check":
+                req.Performer(func(req *Request) string {
+                    transaction := operations.NewTransactionWithoutCheck(req.XmlBody)
                     if _, err := transaction.Save(); err != nil {
                         response := transaction.ErrorXmlResponse(err)
                         glog.Infof("Worker[%v] answering with %v", w.merchant, response)

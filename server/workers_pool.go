@@ -3,7 +3,7 @@ package server
 import (
     "sync"
     glog "github.com/golang/glog"
-    "eticket-billing/config"
+    "eticket-billing-server/config"
 )
 
 type WorkersPool []*Worker

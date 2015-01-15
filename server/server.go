@@ -8,7 +8,7 @@ import (
     "bytes"
     "time"
     "github.com/golang/glog"
-    "eticket-billing/config"
+    "eticket-billing-server/config"
 )
 
 var (
