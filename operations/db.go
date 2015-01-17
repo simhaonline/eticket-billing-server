@@ -7,21 +7,6 @@ import (
     "fmt"
 )
 
-/*
-create table operations (
-  id serial primary key,
-  merchant_id varchar(20),
-  operation_ident varchar(100),
-  description text,
-  amount integer,
-  xml_data xml,
-  operation_created_at timestamp without time zone,
-  created_at timestamp without time zone default now(),
-  updated_at timestamp without time zone,
-  UNIQUE (operation_ident)
-)
-*/
-
 func NewConnection() *sql.DB {
     config := config.GetConfig()
 

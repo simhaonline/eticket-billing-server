@@ -8,8 +8,10 @@ import (
 
 type Transaction struct {
     XMLName xml.Name `xml:"request"`
+    ApplicationName string `xml:"application_name"`
     OperationType string `xml:"type,attr"`
     Merchant string `xml:"merchant"`
+    OperationName string `xml:"operation_name"`
     OperationIdent string `xml:"operation_ident"`
     Description string `xml:"description"`
     Amount int64 `xml:"amount"`

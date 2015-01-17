@@ -30,9 +30,9 @@ func (r *TransactionWithoutCheck) Save() (uint64, error) {
 
     conn := NewConnection()
     defer conn.Close()
-    ok := conn.QueryRow(`INSERT INTO operations (merchant_id, operation_ident, description, amount, operation_created_at, xml_data)
-                     VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`,
-        r.Merchant, r.OperationIdent, r.Description, r.Amount, r.OperationCreatedAt, r.OriginXml).Scan(&id)
+    ok := conn.QueryRow(`INSERT INTO operations (merchant_id, application_name, operation_name, operation_ident, description, amount, operation_created_at, xml_data)
+                     VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id`,
+        r.Merchant, r.ApplicationName, r.OperationName, r.OperationIdent, r.Description, r.Amount, r.OperationCreatedAt, r.OriginXml).Scan(&id)
 
     if err, ok := ok.(*pq.Error); ok {
         if "unique_violation" == err.Code.Name() {
