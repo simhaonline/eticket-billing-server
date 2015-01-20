@@ -112,8 +112,7 @@ func (s *Server) Stop(stChan chan bool) {
     glog.V(2).Info("Closed servers files and chans")
     glog.Flush()
 
-//    pool := NewWorkersPool()
-//    pool.StopAll()
+    workersPool.StopAll()
 
     glog.Info("Server is stopped")
     glog.Flush()
