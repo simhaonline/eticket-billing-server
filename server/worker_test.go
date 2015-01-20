@@ -3,13 +3,18 @@ package server
 import (
     "testing"
     "reflect"
-    "github.com/stretchr/testify/assert"
+    . "gopkg.in/check.v1"
 )
 
-func TestnewWorker(t *testing.T) {
-    assert := assert.New(t)
+func TestWorker(t *testing.T) { TestingT(t) }
 
+type WorkerSuite struct{}
+
+var _ = Suite(&WorkerSuite{})
+
+func (s *WorkerSuite) TestnewWorker(c *C) {
     worker := newWorker("1", "/tmp")
-    assert.Equal("*server.Worker", reflect.TypeOf(worker).String(), "NewWorker should return Worker data")
-    assert.Equal(worker.merchant, 1, "Merchants doesnt' match")
+
+    c.Assert(reflect.TypeOf(worker).String(), Equals, "*server.Worker")
+    c.Assert(worker.merchant, Equals, "1")
 }

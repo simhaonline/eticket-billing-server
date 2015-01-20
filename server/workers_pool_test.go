@@ -3,32 +3,53 @@ package server
 import (
     "testing"
     "reflect"
-    "github.com/stretchr/testify/assert"
+    "eticket-billing-server/config"
+    . "gopkg.in/check.v1"
 )
 
-func TestNewWorkersPool(t *testing.T) {
-    assert := assert.New(t)
+func TestWorkerPool(t *testing.T) { TestingT(t) }
 
-    pool := *NewWorkersPool()
-    assert.Equal("server.WorkersPool", reflect.TypeOf(pool).String(), "NewWorkersPool should return pool of workers")
-    assert.Equal(0, len(pool), "Pool of workers must be empty")
+type WorkersPoolSuite struct{
+    config *config.Config
 }
 
-func TestGetWorkerForMerchant(t *testing.T) {
-    assert := assert.New(t)
+var _ = Suite(&WorkersPoolSuite{})
 
-    pool := NewWorkersPool()
+func (s *WorkersPoolSuite) SetUpSuite(c *C) {
+    s.config = &config.Config{RequestLogDir: "/tmp"}
+}
 
+func (s *WorkersPoolSuite) TestNewWorkersPool(c *C) {
+    pool := NewWorkersPool(s.config)
+    c.Assert(reflect.TypeOf(pool).String(), Equals, "server.WorkersPool")
+    c.Assert(len(pool.pool), Equals, 0)
+}
+
+func (s *WorkersPoolSuite) TestWorkersPoolInstance(c *C) {
+    pool := NewWorkersPool(s.config)
 
     worker := pool.GetWorkerForMerchant("10")
-    assert.Equal("10", worker.merchant, "It should create new worker for merchant")
-    assert.Equal(1, len(workersPoolInstance), "It should change length of pool by 1")
+    c.Assert(worker.merchant, Equals, "10")
+    c.Assert(len(pool.pool), Equals, 1)
 
     worker = pool.GetWorkerForMerchant("10")
-    assert.Equal("10", worker.merchant, "It should fetch worker for merchant")
-    assert.Equal(1, len(workersPoolInstance), "It should not change length of pool after second call")
+
+    c.Assert(worker.merchant, Equals, "10")
+    c.Assert(len(pool.pool), Equals, 1)
 
     worker = pool.GetWorkerForMerchant("20")
-    assert.Equal("20", worker.merchant, "It should fetch worker for merchant")
-    assert.Equal(2, len(workersPoolInstance), "It should not change length of pool after second call")
+    c.Assert(worker.merchant, Equals, "20")
+    c.Assert(len(pool.pool), Equals, 2)
+}
+
+func (s *WorkersPoolSuite) TestTwoPools(c *C) {
+    pool1 := NewWorkersPool(s.config)
+    pool2 := NewWorkersPool(s.config)
+
+    _ = pool1.GetWorkerForMerchant("10")
+    _ = pool1.GetWorkerForMerchant("20")
+    _ = pool2.GetWorkerForMerchant("20")
+
+    c.Assert(len(pool1.pool), Equals, 2)
+    c.Assert(len(pool2.pool), Equals, 1)
 }

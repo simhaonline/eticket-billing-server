@@ -3,8 +3,14 @@ package server
 import (
     "testing"
     "encoding/xml"
-    "github.com/stretchr/testify/assert"
+    . "gopkg.in/check.v1"
 )
+
+func TestRequest(t *testing.T) { TestingT(t) }
+
+type RequestSuite struct{}
+
+var _ = Suite(&RequestSuite{})
 
 var xmlData string = `
 <request type="budget">
@@ -15,11 +21,9 @@ var xmlData string = `
   <amount>%v</amount>
 </request>`
 
-func TestRequest(t *testing.T) {
-    assert := assert.New(t)
-
+func (s *RequestSuite) TestRequest(c *C) {
     r := Request{}
     _ = xml.Unmarshal([]byte(xmlData), &r)
-    assert.Equal("11", r.Merchant)
-    assert.Equal("budget", r.OperationType)
+    c.Assert(r.Merchant, Equals, "11")
+    c.Assert(r.OperationType, Equals, "budget")
 }

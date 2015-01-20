@@ -6,47 +6,43 @@ import (
     "eticket-billing-server/config"
 )
 
-type WorkersPool []*Worker
-
-var workersPoolInstance WorkersPool
+type WorkersPool struct {
+    pool []*Worker
+    config *config.Config
+}
 
 var mutex = sync.Mutex{}
 
-func GetWorkersPool() *WorkersPool {
-    if workersPoolInstance == nil {
-        workersPoolInstance = make(WorkersPool, 0)
-    }
-
-    return &workersPoolInstance
+func NewWorkersPool(config *config.Config) WorkersPool {
+    return WorkersPool{config: config}
 }
 
 func (wp *WorkersPool) GetWorkerForMerchant(merchant string) *Worker {
     pos := wp.workerPosition(merchant)
 
     if -1 == pos {
-        config := config.GetConfig()
-        worker := newWorker(merchant, config.RequestLogDir)
+        worker := newWorker(merchant, wp.config.RequestLogDir)
         wp.appendWorker(worker)
 
         pos = wp.workerPosition(merchant)
         go worker.Serve()
     }
 
-    return (*wp)[pos]
+    return wp.pool[pos]
 }
 
 func (wp *WorkersPool) appendWorker(worker *Worker) {
     mutex.Lock()
-    workersPoolInstance = append(*wp, worker)
+    wp.pool = append(wp.pool, worker)
     mutex.Unlock()
 }
 
 func (wp *WorkersPool) StopAll() {
     mutex.Lock()
     // TODO iterate from last and remove it from array
-    glog.V(2).Infof("Found %v workers", len(workersPoolInstance))
-    for i := 0; i < len(workersPoolInstance); i++ {
-        worker := (*wp)[i]
+    glog.V(2).Infof("Found %v workers", len(wp.pool))
+    for i := 0; i < len(wp.pool); i++ {
+        worker := wp.pool[i]
         glog.V(2).Infof("Stopping Worker[%v]...", worker.merchant)
         worker.Stop()
     }
@@ -56,7 +52,7 @@ func (wp *WorkersPool) StopAll() {
 func (wp WorkersPool) workerPosition(merchant string) int {
     pos := -1
     mutex.Lock()
-    for ind, elem := range wp {
+    for ind, elem := range wp.pool {
         if elem.merchant == merchant {
             pos = ind
         }
