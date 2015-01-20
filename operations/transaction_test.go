@@ -1,25 +1,33 @@
 package operations
 
 import (
+    "eticket-billing-server/config"
     "testing"
     "reflect"
-    "github.com/stretchr/testify/suite"
     "time"
     "fmt"
+    . "gopkg.in/check.v1"
 )
 
-type TransactionTestSuite struct {
-    suite.Suite
+func TestTransaction(t *testing.T) { TestingT(t) }
+
+type TransactionSuite struct{}
+
+var _ = Suite(&TransactionSuite{})
+
+func (s *TransactionSuite) SetUpSuite(c *C) {
+    config := config.NewConfig("test", "../config.gcfg")
+    SetupConnections(config)
 }
 
-func (suite TransactionTestSuite) SetupTest() {
+func (s *TransactionSuite) SetUpTest(c *C) {
     conn := NewConnection()
     defer conn.Close()
     _, ok := conn.Exec("truncate table operations")
     if ok != nil { panic(ok) }
 }
 
-func (suite TransactionTestSuite) TearDownTest() {
+func (s *TransactionSuite) TearDownTest(c *C) {
     conn := NewConnection()
     defer conn.Close()
     _, ok := conn.Exec("truncate table operations")
@@ -45,28 +53,28 @@ var xmlData string = `
   <amount>%v</amount>
 </request>`
 
-func (suite *TransactionTestSuite) TestNewTransaction() {
+func (s *TransactionSuite) TestNewTransaction(c *C) {
     record := NewTransaction(fmt.Sprintf(xmlData, 101, 12387))
 
-    suite.Equal("*operations.Transaction", reflect.TypeOf(record).String(), "NewTransaction should return new record composed from xml")
-    suite.Equal("11", record.Merchant)
-    suite.Equal("101", record.OperationIdent)
-    suite.Equal("Charge", record.Description)
-    suite.Equal(12387, record.Amount)
+    c.Assert(reflect.TypeOf(record).String(), Equals, "*operations.Transaction")
+    c.Assert(record.Merchant, Equals, "11")
+    c.Assert(record.OperationIdent, Equals, "101")
+    c.Assert(record.Description, Equals, "Charge")
+    c.Assert(record.Amount, Equals, int64(12387))
 
     ct := customTime{time.Date(2014, time.October, 1, 20, 13, 56, 0, time.UTC)}
-    suite.Equal(ct, record.OperationCreatedAt)
+    c.Assert(record.OperationCreatedAt, Equals, ct)
 }
 
-func (suite *TransactionTestSuite) TestSave() {
+func (s *TransactionSuite) TestSave(c *C) {
     initialValue := countRows()
     record := NewTransaction(fmt.Sprintf(xmlData, 101, 100))
     record.Save()
     finishValue := countRows()
-    suite.Equal(1, (finishValue - initialValue), "Count of records should be changed by 1")
+    c.Assert(int(finishValue - initialValue), Equals, 1)
 }
 
-func (suite *TransactionTestSuite) TestNotEnoughMoney() {
+func (s *TransactionSuite) TestNotEnoughMoney(c *C) {
     r := NewTransaction(fmt.Sprintf(xmlData, 101, 100))
     r.Save()
     r = NewTransaction(fmt.Sprintf(xmlData, 102, -200))
@@ -74,11 +82,12 @@ func (suite *TransactionTestSuite) TestNotEnoughMoney() {
 
     error := err.(*TransactionError)
 
-    suite.NotNil(err)
-    suite.Equal("not_enough_money", error.Code, "Returns error's code")
-    suite.NotNil(error.Message)
+    c.Assert(err, NotNil)
+    c.Assert(error.Code, Equals, "not_enough_money")
+    c.Assert(error.Message, NotNil)
 }
 
+/*
 func (suite *TransactionTestSuite) TestDuplicationOfRecords() {
     initialValue := countRows()
     r := NewTransaction(fmt.Sprintf(xmlData, 101, 12387))
@@ -117,3 +126,4 @@ func (suite *TransactionTestSuite) TestErrorXmlResponse() {
 func TestTransactionSuite(t *testing.T) {
     suite.Run(t, new(TransactionTestSuite))
 }
+*/

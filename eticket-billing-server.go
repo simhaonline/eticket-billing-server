@@ -36,15 +36,13 @@ func main() {
         panic(err)
     }
 
-    config.ParseConfig(environment, configFile)
-
-    waitForStop := make(chan bool, 1)
-
-    config := config.GetConfig()
+    config := config.NewConfig(environment, configFile)
+    SetupConnections(config)
 
     server := server.NewServer(config)
     glog.Infof("New Server is starting with configuration %+v", config)
     glog.Flush()
+
     go server.Serve()
 
     signalChan := make(chan os.Signal)
@@ -55,6 +53,7 @@ func main() {
     glog.V(2).Infof("Received %v signal. Stopping...", signal)
     glog.Flush()
 
+    waitForStop := make(chan bool, 1)
     server.Stop(waitForStop)
 
     <-waitForStop

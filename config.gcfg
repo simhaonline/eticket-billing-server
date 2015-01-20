@@ -3,3 +3,9 @@ database-name = "eticket_billing_server_development"
 database-user = eticket_billing_server_user
 database-password = eticket_billing_server_user
 request-log-dir = "/Users/ignar/Development/gopher/src/eticket-billing-server/log"
+
+[environment "test"]
+database-name = "eticket_billing_server_test"
+database-user = eticket_billing_server_user
+database-password = eticket_billing_server_user
+request-log-dir = "/Users/ignar/Development/gopher/src/eticket-billing-server/log"

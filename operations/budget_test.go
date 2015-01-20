@@ -1,5 +1,5 @@
 package operations
-
+/*
 import (
     "testing"
     "github.com/stretchr/testify/suite"
@@ -33,3 +33,4 @@ func (suite *BudgetTestSuite) TestXmlResponse() {
 func TestBudgetSuite(t *testing.T) {
     suite.Run(t, new(BudgetTestSuite))
 }
+*/

@@ -3,14 +3,21 @@ package operations
 import (
     _ "github.com/lib/pq"
     "database/sql"
-    "eticket-billing-server/config"
+    cfg "eticket-billing-server/config"
     "fmt"
 )
 
-func NewConnection() *sql.DB {
-    config := config.GetConfig()
+var currentConfig *cfg.Config
 
-    connectionString := fmt.Sprintf("user=%v password=%v dbname=%v sslmode=disable", config.DatabaseUser, config.DatabasePassword, config.DatabaseName)
+func SetupConnections(c *cfg.Config) {
+    currentConfig = c
+}
+
+func NewConnection() *sql.DB {
+    connectionString := fmt.Sprintf("user=%v password=%v dbname=%v sslmode=disable",
+        currentConfig.DatabaseUser,
+        currentConfig.DatabasePassword,
+        currentConfig.DatabaseName)
 
     db, ok := sql.Open("postgres", connectionString)
     if ok != nil { panic (ok) }
