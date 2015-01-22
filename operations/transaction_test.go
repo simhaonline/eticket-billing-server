@@ -34,7 +34,6 @@ func (s *TransactionSuite) TearDownTest(c *C) {
     if ok != nil { panic(ok) }
 }
 
-
 func countRows() uint64 {
     var cnt uint64
     conn := NewConnection()
