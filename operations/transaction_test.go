@@ -46,7 +46,9 @@ func countRows() uint64 {
 
 var xmlData string = `
 <request type="transaction">
+  <application_name>app</application_name>
   <merchant>11</merchant>
+  <operation_name>charge</operation_name>
   <operation_ident>%v</operation_ident>
   <description>Charge</description>
   <operation_created_at>2014-10-01 20:13:56</operation_created_at>
@@ -87,8 +89,8 @@ func (s *TransactionSuite) TestNotEnoughMoney(c *C) {
     c.Assert(error.Message, NotNil)
 }
 
-/*
-func (suite *TransactionTestSuite) TestDuplicationOfRecords() {
+
+func (s *TransactionSuite) TestDuplicationOfRecords(c *C) {
     initialValue := countRows()
     r := NewTransaction(fmt.Sprintf(xmlData, 101, 12387))
     r.Save()
@@ -96,34 +98,29 @@ func (suite *TransactionTestSuite) TestDuplicationOfRecords() {
     _, err := r.Save()
     finishValue := countRows()
 
+    c.Assert(err, NotNil)
+
     error := err.(*TransactionError)
 
-    suite.NotNil(err)
-    suite.Equal("duplication", error.Code, "Returns error's code")
-    suite.NotNil(error.Message)
-    suite.Equal(0, int(initialValue), "First must be 1")
-    suite.Equal(1, int(finishValue), "Result must be 1")
+    c.Assert(error.Code, Equals, "duplication")
+    c.Assert(error.Message, NotNil)
+    c.Assert(int(initialValue), Equals, 0)
+    c.Assert(int(finishValue), Equals, 1)
 }
 
-func (suite *TransactionTestSuite) TestXmlResponse() {
-    transaction := Transaction{Merchant: "10", OperationIdent: "asdf", Description: "Hello", Amount: 101}
-    answer := []byte(`<answer type="transaction"><merchant>10</merchant><operation_ident>asdf</operation_ident><description>Hello</description><amount>101</amount><operation_created_at>0001-01-01T00:00:00Z</operation_created_at></answer>`)
+func (s *TransactionSuite) TestXmlResponse(c *C) {
+    transaction := Transaction{Merchant: "10", OperationIdent: "asdf", Description: "Hello", Amount: 101, ApplicationName: "app", OperationName: "charge"}
+    answer := []byte(`<answer type="transaction"><application_name>app</application_name><merchant>10</merchant><operation_name>charge</operation_name><operation_ident>asdf</operation_ident><description>Hello</description><amount>101</amount><operation_created_at>0001-01-01T00:00:00Z</operation_created_at></answer>`)
     answer = append(answer, '\n')
-    suite.Equal(string(answer), transaction.XmlResponse(), "Wrong xml answer")
+    c.Assert(transaction.XmlResponse(), Equals, string(answer))
 }
 
-func (suite *TransactionTestSuite) TestErrorXmlResponse() {
+func (s *TransactionSuite) TestErrorXmlResponse(c *C) {
     r := NewTransaction(fmt.Sprintf(xmlData, 101, -100))
     _, err := r.Save()
 
     xml := r.ErrorXmlResponse(err)
-    answer := []byte(`<answer type="transaction"><error><message>Not enough money for operation</message><code>not_enough_money</code></error><merchant>11</merchant><operation_ident>101</operation_ident><description>Charge</description><amount>-100</amount><operation_created_at>2014-10-01T20:13:56Z</operation_created_at></answer>`)
+    answer := []byte(`<answer type="transaction"><error><message>Not enough money for operation</message><code>not_enough_money</code></error><application_name>app</application_name><merchant>11</merchant><operation_name>charge</operation_name><operation_ident>101</operation_ident><description>Charge</description><amount>-100</amount><operation_created_at>2014-10-01T20:13:56Z</operation_created_at></answer>`)
     answer = append(answer, '\n')
-    suite.Equal(string(answer), xml, "Compose xml with error")
+    c.Assert(xml, Equals, string(answer))
 }
-
-
-func TestTransactionSuite(t *testing.T) {
-    suite.Run(t, new(TransactionTestSuite))
-}
-*/
