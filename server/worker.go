@@ -1,6 +1,7 @@
 package server
 
 import (
+    "eticket-billing-server/request"
     "fmt"
     "os"
     "strconv"
@@ -9,7 +10,7 @@ import (
 
 type Worker struct {
     merchant string
-    inputChan chan *Request
+    inputChan chan *request.Request
     quitChan chan bool
     requestsLog *os.File
     middleware MiddlewareChain
@@ -25,7 +26,7 @@ func newWorker(merchant string, middleware MiddlewareChain, filePrefix string) *
         panic(ok)
     }
 
-    return &Worker{merchant, make(chan *Request), make(chan bool), f, middleware}
+    return &Worker{merchant, make(chan *request.Request), make(chan bool), f, middleware}
 }
 
 func (w Worker) logRequest(req string) {
@@ -39,7 +40,7 @@ func (w Worker) logRequest(req string) {
 func (w Worker) Serve() {
     glog.Infof("New Worker[%v] is spawned", w.merchant)
 
-    var req *Request
+    var req *request.Request
     for {
         select {
         case req = <- w.inputChan:

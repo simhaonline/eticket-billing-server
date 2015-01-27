@@ -9,6 +9,7 @@ import (
     "time"
     "github.com/golang/glog"
     "eticket-billing-server/config"
+    "eticket-billing-server/request"
 )
 
 var (
@@ -91,7 +92,7 @@ func (s *Server) Serve() {
         input := string(buf)
         input = strings.TrimSpace(input)
 
-        request := NewRequest(input)
+        request := request.NewRequest(input)
         request.Conn = conn
 
         glog.Info(input)

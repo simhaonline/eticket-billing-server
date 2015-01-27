@@ -1,12 +1,16 @@
 package server
 
-type MiddlewareChain func(*Request) *Request
+import(
+    "eticket-billing-server/request"
+)
 
-func NewChain(constructors ...func(func(*Request) *Request) func(*Request) *Request) MiddlewareChain {
+type MiddlewareChain func(*request.Request) *request.Request
+
+func NewChain(constructors ...func(func(*request.Request) *request.Request) func(*request.Request) *request.Request) MiddlewareChain {
     var lastFunction MiddlewareChain
     for i := len(constructors)-1; i >=0 ; i-- {
         if i == len(constructors)-1 {
-            lastFunction = constructors[i](func(r *Request) *Request {
+            lastFunction = constructors[i](func(r *request.Request) *request.Request {
                 return r
             })
         } else {
