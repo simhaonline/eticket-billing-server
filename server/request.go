@@ -49,6 +49,7 @@ func (req *Request) Performer(fnc func(r *Request) string) *Request {
             fmt.Printf("Stack of %d bytes: %s\n", count, trace)
         }
     }()
+    defer req.Conn.Close()
     xmlString := fnc(req)
     req.Conn.Write([]byte(xmlString))
     return req

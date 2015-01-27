@@ -15,13 +15,12 @@ var (
     listOfWorkers = make([]*Worker, 0)
 )
 
-var workersPool WorkersPool
-
 type Server struct {
     stopChan chan bool
     requestLog *os.File
     config *config.Config
     middlewares MiddlewareChain
+    workersPool WorkersPool
 }
 
 func NewServer(config *config.Config, middlewares MiddlewareChain) *Server {
@@ -55,7 +54,7 @@ func (s *Server) Serve() {
     }
     defer l.Close()
 
-    workersPool := NewWorkersPool(s.config, s.middlewares)
+    s.workersPool = NewWorkersPool(s.config, s.middlewares)
 
     for {
         select {
@@ -99,7 +98,7 @@ func (s *Server) Serve() {
 
         s.logRequest(input)
 
-        worker := workersPool.GetWorkerForMerchant(request.Merchant)
+        worker := s.workersPool.GetWorkerForMerchant(request.Merchant)
         worker.inputChan <- request
     }
 }
@@ -113,7 +112,7 @@ func (s *Server) Stop(stChan chan bool) {
     glog.V(2).Info("Closed servers files and chans")
     glog.Flush()
 
-    workersPool.StopAll()
+    s.workersPool.StopAll()
 
     glog.Info("Server is stopped")
     glog.Flush()

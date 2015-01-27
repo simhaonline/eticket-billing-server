@@ -37,7 +37,7 @@ func (w Worker) logRequest(req string) {
 }
 
 func (w Worker) Serve() {
-    glog.Info("New Worker[%v] is spawned", w.merchant)
+    glog.Infof("New Worker[%v] is spawned", w.merchant)
 
     var req *Request
     for {
