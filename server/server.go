@@ -21,14 +21,15 @@ type Server struct {
     stopChan chan bool
     requestLog *os.File
     config *config.Config
+    middlewares MiddlewareChain
 }
 
-func NewServer(config *config.Config) *Server {
+func NewServer(config *config.Config, middlewares MiddlewareChain) *Server {
     // TODO check connection to DB
     f, ok := os.OpenFile(config.RequestLogDir + "/requests.log", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0666)
     if ok != nil { panic(ok) }
 
-    s := Server{stopChan: make(chan bool), requestLog: f, config: config}
+    s := Server{stopChan: make(chan bool), requestLog: f, config: config, middlewares: middlewares}
     return &s
 }
 
@@ -54,7 +55,7 @@ func (s *Server) Serve() {
     }
     defer l.Close()
 
-    workersPool := NewWorkersPool(s.config)
+    workersPool := NewWorkersPool(s.config, s.middlewares)
 
     for {
         select {

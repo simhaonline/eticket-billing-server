@@ -26,7 +26,7 @@ func NewRequest(xmlData string) *Request {
     return r
 }
 
-func (req *Request) Performer(fnc func(r *Request) string) {
+func (req *Request) PerformerOld(fnc func(r *Request) string) {
     defer func() {
         if err := recover(); err != nil {
             trace := make([]byte, 1024)
@@ -38,4 +38,18 @@ func (req *Request) Performer(fnc func(r *Request) string) {
     defer req.Conn.Close()
     xmlString := fnc(req)
     req.Conn.Write([]byte(xmlString))
+}
+
+func (req *Request) Performer(fnc func(r *Request) string) *Request {
+    defer func() {
+        if err := recover(); err != nil {
+            trace := make([]byte, 1024)
+            count := runtime.Stack(trace, true)
+            fmt.Printf("Recover from panic: %s\n", err)
+            fmt.Printf("Stack of %d bytes: %s\n", count, trace)
+        }
+    }()
+    xmlString := fnc(req)
+    req.Conn.Write([]byte(xmlString))
+    return req
 }

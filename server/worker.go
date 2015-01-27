@@ -5,7 +5,6 @@ import (
     "os"
     "strconv"
     glog "github.com/golang/glog"
-    "eticket-billing-server/operations"
 )
 
 type Worker struct {
@@ -13,9 +12,10 @@ type Worker struct {
     inputChan chan *Request
     quitChan chan bool
     requestsLog *os.File
+    middleware MiddlewareChain
 }
 
-func newWorker(merchant string, filePrefix string) *Worker {
+func newWorker(merchant string, middleware MiddlewareChain, filePrefix string) *Worker {
     m, _ := strconv.Atoi(merchant)
     fileName := fmt.Sprintf("%v/worker_%v.log", filePrefix, m)
 
@@ -25,7 +25,7 @@ func newWorker(merchant string, filePrefix string) *Worker {
         panic(ok)
     }
 
-    return &Worker{merchant, make(chan *Request), make(chan bool), f}
+    return &Worker{merchant, make(chan *Request), make(chan bool), f, middleware}
 }
 
 func (w Worker) logRequest(req string) {
@@ -46,46 +46,8 @@ func (w Worker) Serve() {
             w.logRequest(req.XmlBody)
             glog.Infof("Worker[%v] received income request %v", w.merchant, req.XmlBody)
 
-            switch req.OperationType {
-            case "budget":
-                req.Performer(func(req *Request) string {
-                    budget := operations.Budget{Merchant: w.merchant}
-                    budget.Calculate()
-                    response := budget.XmlResponse()
-                    glog.Infof("Worker[%v] answering with %v", w.merchant, response)
-                    return response
-                })
-            case "transaction":
-                req.Performer(func(req *Request) string {
-                    transaction := operations.NewTransaction(req.XmlBody)
-                    if _, err := transaction.Save(); err != nil {
-                        response := transaction.ErrorXmlResponse(err)
-                        glog.Infof("Worker[%v] answering with %v", w.merchant, response)
-                        return response
-                    } else {
-                        response := transaction.XmlResponse()
-                        glog.Infof("Worker[%v] answering with %v", w.merchant, response)
-                        return response
-                    }
-                })
-            case "transaction-without-check":
-                req.Performer(func(req *Request) string {
-                    transaction := operations.NewTransactionWithoutCheck(req.XmlBody)
-                    if _, err := transaction.Save(); err != nil {
-                        response := transaction.ErrorXmlResponse(err)
-                        glog.Infof("Worker[%v] answering with %v", w.merchant, response)
-                        return response
-                    } else {
-                        response := transaction.XmlResponse()
-                        glog.Infof("Worker[%v] answering with %v", w.merchant, response)
-                        return response
-                    }
-                })
-            default:
-                glog.Errorf("Worker[%v] received unexpected request %v", w.merchant, req.XmlBody)
-                req.Conn.Write([]byte("I have no idea what to do\n"))
-                req.Conn.Close()
-            }
+            w.middleware(req)
+
         case <- w.quitChan:
             glog.Infof("Wroker %v quitting", w.merchant)
             return

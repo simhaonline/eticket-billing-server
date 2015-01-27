@@ -9,19 +9,20 @@ import (
 type WorkersPool struct {
     pool []*Worker
     config *config.Config
+    middlewares MiddlewareChain
 }
 
 var mutex = sync.Mutex{}
 
-func NewWorkersPool(config *config.Config) WorkersPool {
-    return WorkersPool{config: config}
+func NewWorkersPool(config *config.Config, middlewares MiddlewareChain) WorkersPool {
+    return WorkersPool{config: config, middlewares: middlewares}
 }
 
 func (wp *WorkersPool) GetWorkerForMerchant(merchant string) *Worker {
     pos := wp.workerPosition(merchant)
 
     if -1 == pos {
-        worker := newWorker(merchant, wp.config.RequestLogDir)
+        worker := newWorker(merchant, wp.middlewares, wp.config.RequestLogDir)
         wp.appendWorker(worker)
 
         pos = wp.workerPosition(merchant)

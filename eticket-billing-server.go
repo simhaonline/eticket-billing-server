@@ -5,6 +5,7 @@ import (
     "flag"
     "eticket-billing-server/server"
     "eticket-billing-server/config"
+    "eticket-billing-server/operations"
     "os"
     "os/signal"
     "syscall"
@@ -37,9 +38,10 @@ func main() {
     }
 
     config := config.NewConfig(environment, configFile)
-    SetupConnections(config)
+    operations.SetupConnections(config)
 
-    server := server.NewServer(config)
+    chain := server.NewChain(server.NewPingMiddleware, server.NewLogMiddleware, server.NewServeMiddleware)
+    server := server.NewServer(config, chain)
     glog.Infof("New Server is starting with configuration %+v", config)
     glog.Flush()
 
