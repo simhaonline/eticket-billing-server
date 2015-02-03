@@ -1,17 +1,17 @@
 package performers
 
-import(
-    "github.com/golang/glog"
-    "eticket-billing-server/request"
-    "eticket-billing-server/operations"
+import (
+	"eticket-billing-server/operations"
+	"eticket-billing-server/request"
+	"github.com/golang/glog"
 )
 
 func Budget(req *request.Request) *request.Request {
-    return req.Perform(func(req *request.Request) string {
-        budget := operations.Budget{Merchant: req.Merchant}
-        budget.Calculate()
-        response := budget.XmlResponse()
-        glog.Infof("Worker[%v] answering with %v", req.Merchant, response)
-        return response
-    })
+	return req.Perform(func(req *request.Request) string {
+		budget := operations.Budget{Merchant: req.Merchant}
+		budget.Calculate()
+		response := budget.XmlResponse()
+		glog.Infof("Worker[%v] answering with %v", req.Merchant, response)
+		return response
+	})
 }

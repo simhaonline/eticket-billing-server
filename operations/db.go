@@ -1,31 +1,33 @@
 package operations
 
 import (
-    _ "github.com/lib/pq"
-    "database/sql"
-    cfg "eticket-billing-server/config"
-    "fmt"
+	"database/sql"
+	cfg "eticket-billing-server/config"
+	"fmt"
+	_ "github.com/lib/pq"
 )
 
 var currentConfig *cfg.Config
 
 func SetupConnections(c *cfg.Config) {
-    currentConfig = c
+	currentConfig = c
 }
 
 func NewConnection() *sql.DB {
-    connectionString := fmt.Sprintf("user=%v password=%v dbname=%v sslmode=disable",
-        currentConfig.DatabaseUser,
-        currentConfig.DatabasePassword,
-        currentConfig.DatabaseName)
+	connectionString := fmt.Sprintf("user=%v password=%v dbname=%v sslmode=disable",
+		currentConfig.DatabaseUser,
+		currentConfig.DatabasePassword,
+		currentConfig.DatabaseName)
 
-    db, ok := sql.Open("postgres", connectionString)
-    if ok != nil { panic (ok) }
+	db, ok := sql.Open("postgres", connectionString)
+	if ok != nil {
+		panic(ok)
+	}
 
-    err := db.Ping()
-    if err != nil {
-        panic(err.Error())
-    }
+	err := db.Ping()
+	if err != nil {
+		panic(err.Error())
+	}
 
-    return db
+	return db
 }

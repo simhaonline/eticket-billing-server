@@ -4,4 +4,4 @@ ROADMAP
 - [X] directory where store checksum files
 - [ ] utility program to check recieved and processed request
 - [ ] utility program to process unprocessed requests
-- [ ] process request as middleware
+- [X] process request as middleware

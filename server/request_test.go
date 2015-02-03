@@ -1,9 +1,9 @@
 package server
 
 import (
-    "testing"
-    "encoding/xml"
-    . "gopkg.in/check.v1"
+	"encoding/xml"
+	. "gopkg.in/check.v1"
+	"testing"
 )
 
 func TestRequest(t *testing.T) { TestingT(t) }
@@ -22,8 +22,8 @@ var xmlData string = `
 </request>`
 
 func (s *RequestSuite) TestRequest(c *C) {
-    r := Request{}
-    _ = xml.Unmarshal([]byte(xmlData), &r)
-    c.Assert(r.Merchant, Equals, "11")
-    c.Assert(r.OperationType, Equals, "budget")
+	r := Request{}
+	_ = xml.Unmarshal([]byte(xmlData), &r)
+	c.Assert(r.Merchant, Equals, "11")
+	c.Assert(r.OperationType, Equals, "budget")
 }
