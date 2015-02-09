@@ -12,7 +12,7 @@ func TestWorkerPool(t *testing.T) { TestingT(t) }
 
 type WorkersPoolSuite struct {
 	config *config.Config
-	chain MiddlewareChain
+	chain  MiddlewareChain
 }
 
 var _ = Suite(&WorkersPoolSuite{})

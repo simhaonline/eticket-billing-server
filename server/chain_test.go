@@ -1,9 +1,9 @@
 package server
 
 import (
-	"eticket-billing-server/request"
 	"eticket-billing-server/middleware"
 	"eticket-billing-server/performers"
+	"eticket-billing-server/request"
 	. "gopkg.in/check.v1"
 	"testing"
 )
@@ -17,9 +17,8 @@ type ChainSuite struct {
 var _ = Suite(&ChainSuite{CheckArray: []string{}})
 
 func BarePerformere(req *request.Request) *request.Request {
-	return req;
+	return req
 }
-
 
 func (s *ChainSuite) SetUpSuite(c *C) {
 	mapping := make(performers.PerformerFnMapping)
