@@ -2,6 +2,7 @@ package server
 
 import (
 	"eticket-billing-server/config"
+	"eticket-billing-server/middleware"
 	. "gopkg.in/check.v1"
 	"reflect"
 	"testing"
@@ -11,22 +12,24 @@ func TestWorkerPool(t *testing.T) { TestingT(t) }
 
 type WorkersPoolSuite struct {
 	config *config.Config
+	chain MiddlewareChain
 }
 
 var _ = Suite(&WorkersPoolSuite{})
 
 func (s *WorkersPoolSuite) SetUpSuite(c *C) {
 	s.config = &config.Config{RequestLogDir: "/tmp"}
+	s.chain = NewChain(middleware.NewServeMiddleware)
 }
 
 func (s *WorkersPoolSuite) TestNewWorkersPool(c *C) {
-	pool := NewWorkersPool(s.config)
+	pool := NewWorkersPool(s.config, s.chain)
 	c.Assert(reflect.TypeOf(pool).String(), Equals, "server.WorkersPool")
 	c.Assert(len(pool.pool), Equals, 0)
 }
 
 func (s *WorkersPoolSuite) TestWorkersPoolInstance(c *C) {
-	pool := NewWorkersPool(s.config)
+	pool := NewWorkersPool(s.config, s.chain)
 
 	worker := pool.GetWorkerForMerchant("10")
 	c.Assert(worker.merchant, Equals, "10")
@@ -43,8 +46,8 @@ func (s *WorkersPoolSuite) TestWorkersPoolInstance(c *C) {
 }
 
 func (s *WorkersPoolSuite) TestTwoPools(c *C) {
-	pool1 := NewWorkersPool(s.config)
-	pool2 := NewWorkersPool(s.config)
+	pool1 := NewWorkersPool(s.config, s.chain)
+	pool2 := NewWorkersPool(s.config, s.chain)
 
 	_ = pool1.GetWorkerForMerchant("10")
 	_ = pool1.GetWorkerForMerchant("20")

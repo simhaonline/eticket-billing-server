@@ -1,7 +1,15 @@
-.PHONY: build release
+.PHONY: build test release
 
 build:
 	go build -o switcher *.go
+
+test:
+	go test -tags=${BUILD_TAGS}
+	cd middleware;	 go test -tags=${BUILD_TAGS}
+	cd operations;	 go test -tags=${BUILD_TAGS}
+	cd performers;	 go test -tags=${BUILD_TAGS}
+	cd request;	 go test -tags=${BUILD_TAGS}
+	cd server;	 go test -tags=${BUILD_TAGS}
 
 release:
 	GOOS=linux GOARCH=amd64 go build -o switcher-linux-x64
