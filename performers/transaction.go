@@ -2,7 +2,6 @@ package performers
 
 import (
 	"eticket-billing-server/operations"
-	"eticket-billing-server/request"
 	"github.com/golang/glog"
 )
 

@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	cfg "eticket-billing-server/config"
 	"fmt"
-	_ "github.com/lib/pq"
+	_ "gopkg.in/lib/pq.v0"
 )
 
 var currentConfig *cfg.Config

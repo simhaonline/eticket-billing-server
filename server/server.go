@@ -3,7 +3,6 @@ package server
 import (
 	"bytes"
 	"eticket-billing-server/config"
-	"eticket-billing-server/request"
 	"github.com/golang/glog"
 	"io"
 	"net"

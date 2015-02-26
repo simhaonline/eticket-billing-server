@@ -1,8 +1,7 @@
-package middleware
+package server
 
 import (
 	"eticket-billing-server/performers"
-	"eticket-billing-server/request"
 )
 
 func NewServeMiddleware(f func(*request.Request) *request.Request) func(*request.Request) *request.Request {

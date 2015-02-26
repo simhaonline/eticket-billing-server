@@ -1,9 +1,5 @@
 package performers
 
-import (
-	"eticket-billing-server/request"
-)
-
 type PerformerFn func(*request.Request) *request.Request
 type PerformerFnMapping map[string]PerformerFn
 

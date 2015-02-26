@@ -2,7 +2,6 @@ package main
 
 import (
 	"eticket-billing-server/config"
-	"eticket-billing-server/middleware"
 	"eticket-billing-server/operations"
 	"eticket-billing-server/performers"
 	"eticket-billing-server/server"

@@ -1,9 +1,7 @@
 package server
 
 import (
-	"eticket-billing-server/middleware"
 	"eticket-billing-server/performers"
-	"eticket-billing-server/request"
 	. "gopkg.in/check.v1"
 	"testing"
 )
