@@ -29,6 +29,7 @@ func main() {
 	flag.StringVar(&pidfile, "pidfile", "", "PID file")
 	flag.Parse()
 
+	// TODO server should handle it by itself
 	pid := syscall.Getpid()
 	glog.Info(pid)
 	spid := fmt.Sprintf("%v", pid)
@@ -47,6 +48,7 @@ func main() {
 	operations.SetupConnections(config)
 
 	chain := server.NewChain(middleware.NewPingMiddleware, middleware.NewLogMiddleware, middleware.NewServeMiddleware)
+	// TODO we can pass mapping to server
 	server := server.NewServer(config, chain)
 	glog.Infof("New Server is starting with configuration %+v", config)
 	glog.Flush()

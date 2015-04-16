@@ -1,5 +1,7 @@
 package operations
-
+// TODO move to separate package, to make it possible easily to include in different places
+// TODO use github.com/jinzhu/gorm
+// TODO use gopkg.in/validator.v2
 import (
 	"database/sql"
 	cfg "eticket-billing-server/config"

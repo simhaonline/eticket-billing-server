@@ -28,6 +28,7 @@ func NewRequest(xmlData string) *Request {
 	return r
 }
 
+// TODO Request should not perform itself, it could be moved to performers package
 func (req *Request) Perform(fnc func(r *Request) string) *Request {
 	defer func() {
 		if err := recover(); err != nil {

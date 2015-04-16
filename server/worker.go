@@ -46,6 +46,7 @@ func (w Worker) Serve() {
 			w.logRequest(req.XmlBody)
 			glog.Infof("Worker[%v] received income request %v", w.merchant, req.XmlBody)
 
+			// TODO rename to Serve
 			w.middleware(req)
 
 		case <-w.quitChan:
