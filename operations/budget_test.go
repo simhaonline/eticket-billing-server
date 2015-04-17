@@ -19,6 +19,7 @@ var _ = Suite(&BudgetSuite{})
 func (s *BudgetSuite) SetUpSuite(c *C) {
 	config := config.NewConfig("test", "../config.gcfg")
 	SetupConnections(config)
+	s.db = NewConnection()
 }
 
 func (s *BudgetSuite) SetUpTest(c *C) {
@@ -31,9 +32,9 @@ func (s *BudgetSuite) TearDownTest(c *C) {
 
 func (s *BudgetSuite) TestCalculate(c *C) {
 	r1 := NewTransaction(fmt.Sprintf(xmlData, 101, 20200))
-	s.db.Create(&r1)
+	s.db.Create(r1)
 	r2 := NewTransaction(fmt.Sprintf(xmlData, 102, 33000))
-	s.db.Create(&r2)
+	s.db.Create(r2)
 
 }
 
