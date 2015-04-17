@@ -3,7 +3,6 @@ package server
 import (
 	"eticket-billing-server/config"
 	"fmt"
-	gorm "github.com/jinzhu/gorm"
 	. "gopkg.in/check.v1"
 	"testing"
 )
@@ -11,31 +10,30 @@ import (
 func TestBudget(t *testing.T) { TestingT(t) }
 
 type BudgetSuite struct {
-	db *gorm.DB
+	db *DbConnection
 }
 
 var _ = Suite(&BudgetSuite{})
 
 func (s *BudgetSuite) SetUpSuite(c *C) {
 	config := config.NewConfig("test", "../config.gcfg")
-	SetupConnections(config)
-	s.db = NewConnection()
+	s.db = NewConnection(config)
 }
 
 func (s *BudgetSuite) SetUpTest(c *C) {
-	s.db.Exec("truncate table operations")
+	s.db.Db.Exec("truncate table operations")
 }
 
 func (s *BudgetSuite) TearDownTest(c *C) {
-	s.db.Exec("truncate table operations")
+	s.db.Db.Exec("truncate table operations")
 }
 
 func (s *BudgetSuite) TestCalculate(c *C) {
-	r1 := NewTransaction(fmt.Sprintf(xmlData, 101, 20200), s.db)
-	s.db.Create(r1)
-	r2 := NewTransaction(fmt.Sprintf(xmlData, 102, 33000))
-	s.db.Create(r2)
-
+	r1 := NewTransaction(fmt.Sprintf(transactionXmlData, 101, 20200), s.db)
+	s.db.Db.Create(r1)
+	r2 := NewTransaction(fmt.Sprintf(transactionXmlData, 102, 33000), s.db)
+	s.db.Db.Create(r2)
+	// TODO assertion missed
 }
 
 func (s *BudgetSuite) TestXmlResponse(c *C) {

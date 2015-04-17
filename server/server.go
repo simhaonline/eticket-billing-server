@@ -1,18 +1,18 @@
 package server
 
 import (
-	"eticket-billing-server/config"
-	glog "github.com/golang/glog"
 	"bytes"
-	"io"
-	"net"
-	"strings"
-	"time"
+	"eticket-billing-server/config"
 	"flag"
-	"io/ioutil"
-	"os"
-	"syscall"
 	"fmt"
+	glog "github.com/golang/glog"
+	"io"
+	"io/ioutil"
+	"net"
+	"os"
+	"strings"
+	"syscall"
+	"time"
 )
 
 var (
@@ -20,11 +20,11 @@ var (
 )
 
 type Server struct {
-	stopChan    chan bool
-	requestLog  *os.File
-	config      *config.Config
-	middlewares MiddlewareChain
-	workersPool WorkersPool
+	stopChan          chan bool
+	requestLog        *os.File
+	config            *config.Config
+	middlewares       MiddlewareChain
+	workersPool       WorkersPool
 	performersMapping PerformerFnMapping
 
 	pidFile string

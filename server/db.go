@@ -5,9 +5,9 @@ package server
 // TODO use gopkg.in/validator.v2
 import (
 	cfg "eticket-billing-server/config"
+	"fmt"
 	gorm "github.com/jinzhu/gorm"
 	pq "gopkg.in/lib/pq.v0"
-	"fmt"
 )
 
 var currentConfig *cfg.Config
@@ -16,11 +16,11 @@ type DbConnection struct {
 	Db *gorm.DB
 }
 
-func NewConnection(c *cfg.Config) DbConnection {
+func NewConnection(c *cfg.Config) *DbConnection {
 	connectionString := fmt.Sprintf("user=%v password=%v dbname=%v sslmode=disable",
-		currentConfig.DatabaseUser,
-		currentConfig.DatabasePassword,
-		currentConfig.DatabaseName)
+		c.DatabaseUser,
+		c.DatabasePassword,
+		c.DatabaseName)
 
 	db, ok := gorm.Open("postgres", connectionString)
 	if ok != nil {
@@ -31,7 +31,7 @@ func NewConnection(c *cfg.Config) DbConnection {
 	db.DB().SetMaxIdleConns(10)
 	db.DB().SetMaxOpenConns(100)
 
-	return DbConnection{ Db: &db }
+	return &DbConnection{Db: &db}
 }
 
 func NormalizeDbError(pqError error) OperationError {

@@ -26,6 +26,7 @@ func (b Budget) XmlResponse() string {
 
 func (b *Budget) Calculate() (int64, error) {
 	var transactions []Transaction
+
 	b.Db.Db.Where("merchant_id = ?", b.Merchant).Find(&transactions)
 	sum := calculateSum(transactions)
 

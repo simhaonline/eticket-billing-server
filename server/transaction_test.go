@@ -3,7 +3,6 @@ package server
 import (
 	"eticket-billing-server/config"
 	"fmt"
-	gorm "github.com/jinzhu/gorm"
 	. "gopkg.in/check.v1"
 	"reflect"
 	"testing"
@@ -13,33 +12,36 @@ import (
 func TestTransaction(t *testing.T) { TestingT(t) }
 
 type TransactionSuite struct {
-	db *gorm.DB
+	db *DbConnection
 }
 
 var _ = Suite(&TransactionSuite{})
 
 func (s *TransactionSuite) SetUpSuite(c *C) {
 	config := config.NewConfig("test", "../config.gcfg")
-	SetupConnections(config)
-	s.db = NewConnection()
+	s.db = NewConnection(config)
 }
 
 func (s *TransactionSuite) SetUpTest(c *C) {
-	s.db.Exec("truncate table operations")
+	s.db.Db.Exec("truncate table operations")
 }
 
 func (s *TransactionSuite) TearDownTest(c *C) {
-	s.db.Exec("truncate table operations")
+	s.db.Db.Exec("truncate table operations")
+}
+
+func (s *TransactionSuite) TearDownSuite(c *C) {
+	s.db.Db.Close()
 }
 
 func countRows(s *TransactionSuite) uint64 {
 	var count uint64
-	s.db.Model(Transaction{}).Count(&count)
+	s.db.Db.Model(Transaction{}).Count(&count)
 
 	return count
 }
 
-var xmlData string = `
+var transactionXmlData string = `
 <request type="transaction">
   <application_name>app</application_name>
   <merchant>11</merchant>
@@ -51,9 +53,9 @@ var xmlData string = `
 </request>`
 
 func (s *TransactionSuite) TestNewTransaction(c *C) {
-	record := NewTransaction(fmt.Sprintf(xmlData, 101, 12387), s.db)
+	record := NewTransaction(fmt.Sprintf(transactionXmlData, 101, 12387), s.db)
 
-	c.Assert(reflect.TypeOf(record).String(), Equals, "*operations.Transaction")
+	c.Assert(reflect.TypeOf(record).String(), Equals, "*server.Transaction")
 	c.Assert(record.Merchant, Equals, "11")
 	c.Assert(record.OperationIdent, Equals, "101")
 	c.Assert(record.Description, Equals, "Charge")
@@ -65,20 +67,21 @@ func (s *TransactionSuite) TestNewTransaction(c *C) {
 
 func (s *TransactionSuite) TestSave(c *C) {
 	initialValue := countRows(s)
-	record := NewTransaction(fmt.Sprintf(xmlData, 101, 100), s.db)
+	record := NewTransaction(fmt.Sprintf(transactionXmlData, 101, 100), s.db)
 
-	s.db.Exec("select count(*)")
-	s.db.Create(record)
+	s.db.Db.Exec("select count(*)")
+	s.db.Db.Create(record)
+
 	finishValue := countRows(s)
 	c.Assert(int(finishValue-initialValue), Equals, 1)
 }
 
 func (s *TransactionSuite) TestNotEnoughMoney(c *C) {
-	record1 := NewTransaction(fmt.Sprintf(xmlData, 101, 100), s.db)
-	s.db.Create(record1)
+	record1 := NewTransaction(fmt.Sprintf(transactionXmlData, 101, 100), s.db)
+	s.db.Db.Create(record1)
 
-	record2 := NewTransaction(fmt.Sprintf(xmlData, 102, -200), s.db)
-	result := s.db.Create(record2)
+	record2 := NewTransaction(fmt.Sprintf(transactionXmlData, 102, -200), s.db)
+	result := s.db.Db.Create(record2)
 
 	error := result.Error
 
@@ -90,11 +93,11 @@ func (s *TransactionSuite) TestNotEnoughMoney(c *C) {
 
 func (s *TransactionSuite) TestDuplicationOfRecords(c *C) {
 	initialValue := countRows(s)
-	record1 := NewTransaction(fmt.Sprintf(xmlData, 101, 12387), s.db)
-	s.db.Create(record1)
+	record1 := NewTransaction(fmt.Sprintf(transactionXmlData, 101, 12387), s.db)
+	s.db.Db.Create(record1)
 
-	record2 := NewTransaction(fmt.Sprintf(xmlData, 101, 12387), s.db)
-	result := s.db.Create(record2)
+	record2 := NewTransaction(fmt.Sprintf(transactionXmlData, 101, 12387), s.db)
+	result := s.db.Db.Create(record2)
 
 	finishValue := countRows(s)
 
@@ -114,15 +117,16 @@ func (s *TransactionSuite) TestDuplicationOfRecords(c *C) {
 }
 
 func (s *TransactionSuite) TestXmlResponse(c *C) {
-	transaction := Transaction{Merchant: "10", OperationIdent: "asdf", Description: "Hello", Amount: 101, ApplicationName: "app", OperationName: "charge"}
+	transactionWithoutCheck := TransactionWithoutCheck{Merchant: "10", OperationIdent: "asdf", Description: "Hello", Amount: 101, ApplicationName: "app", OperationName: "charge"}
+	transaction := Transaction{transactionWithoutCheck}
 	answer := []byte(`<answer type="transaction"><application_name>app</application_name><merchant>10</merchant><operation_name>charge</operation_name><operation_ident>asdf</operation_ident><description>Hello</description><amount>101</amount><operation_created_at>0001-01-01T00:00:00Z</operation_created_at></answer>`)
 	answer = append(answer, '\n')
 	c.Assert(transaction.XmlResponse(), Equals, string(answer))
 }
 
 func (s *TransactionSuite) TestErrorXmlResponse(c *C) {
-	record := NewTransaction(fmt.Sprintf(xmlData, 101, -100), s.db)
-	result := s.db.Create(record)
+	record := NewTransaction(fmt.Sprintf(transactionXmlData, 101, -100), s.db)
+	result := s.db.Db.Create(record)
 
 	xml := record.ErrorXmlResponse(result.Error)
 	answer := []byte(`<answer type="transaction"><error><message>Not enough money for operation</message><code>not_enough_money</code></error><application_name>app</application_name><merchant>11</merchant><operation_name>charge</operation_name><operation_ident>101</operation_ident><description>Charge</description><amount>-100</amount><operation_created_at>2014-10-01T20:13:56Z</operation_created_at></answer>`)

@@ -22,11 +22,11 @@ type TransactionWithoutCheck struct {
 
 	Errors []OperationError `sql:"-" xml:"-"`
 
-	Db *DbConnection
+	Db *DbConnection `xml:"-"`
 }
 
 func NewTransactionWithoutCheck(data string, db *DbConnection) *TransactionWithoutCheck {
-	r := TransactionWithoutCheck{ Db: db }
+	r := TransactionWithoutCheck{Db: db}
 	err := xml.Unmarshal([]byte(data), &r)
 
 	if err != nil {

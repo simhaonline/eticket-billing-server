@@ -7,16 +7,16 @@ import (
 )
 
 type WorkersPool struct {
-	pool        []*Worker
-	config      *config.Config
-	middlewares MiddlewareChain
-	performersMapping PerformerFnMapping
+	pool              []*Worker
+	config            *config.Config
+	middlewares       MiddlewareChain
+	performersMapping *PerformerFnMapping
 }
 
 var mutex = sync.Mutex{}
 
 func NewWorkersPool(config *config.Config, middlewares MiddlewareChain, mapping PerformerFnMapping) WorkersPool {
-	return WorkersPool{config: config, middlewares: middlewares, mapping: mapping}
+	return WorkersPool{config: config, middlewares: middlewares, performersMapping: &mapping}
 }
 
 func (wp *WorkersPool) GetWorkerForMerchant(merchant string) *Worker {

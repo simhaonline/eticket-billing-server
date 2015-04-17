@@ -6,11 +6,12 @@ import (
 
 type BudgetPerformer struct {
 	Request *Request
-	Db *DbConnection
+	Db      *DbConnection
 }
 
-func NewBudgetPerformer(request *Request, connection *DbConnection) *BudgetPerformer {
-	return &BudgetPerformer{Request: request, Db: connection}
+func NewBudgetPerformer(request *Request, connection *DbConnection) performerType {
+	b := BudgetPerformer{Request: request, Db: connection}
+	return performerType(&b)
 }
 
 func (p *BudgetPerformer) Serve() *Request {

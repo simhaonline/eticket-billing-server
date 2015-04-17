@@ -15,8 +15,6 @@ test:
 
 fmt:
 	go fmt eticket-billing-server/config
-	go fmt eticket-billing-server/operations
-	go fmt eticket-billing-server/request
 	go fmt eticket-billing-server/server
 
 release:
@@ -32,6 +30,4 @@ doc:
 
 vet:
 	go vet eticket-billing-server/config
-	go vet eticket-billing-server/operations
-	go vet eticket-billing-server/request
 	go vet eticket-billing-server/server

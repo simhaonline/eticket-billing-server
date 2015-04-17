@@ -6,7 +6,7 @@ func NewServeMiddleware(f func(*Context) *Context) func(*Context) *Context {
 
 		performerConstructor := (*context.PerformersMapping)[context.Request.OperationType]
 		performer := performerConstructor(context.Request, context.Db)
-		req := (*performer).Serve()
+		_ = (performerType(performer)).Serve()
 		return f(context)
 	}
 }

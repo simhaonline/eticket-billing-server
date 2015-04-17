@@ -6,11 +6,12 @@ import (
 
 type TransactionPerformer struct {
 	Request *Request
-	Db *DbConnection
+	Db      *DbConnection
 }
 
-func NewTransactionPerformer(request *Request, connection *DbConnection) *TransactionPerformer {
-	return &TransactionPerformer{Request: request, Db: connection}
+func NewTransactionPerformer(request *Request, connection *DbConnection) performerType {
+	t := TransactionPerformer{Request: request, Db: connection}
+	return performerType(&t)
 }
 
 func (p *TransactionPerformer) Serve() *Request {
@@ -23,15 +24,15 @@ func (p *TransactionPerformer) Serve() *Request {
 		glog.Infof("Worker[%v] answering with %v", req.Merchant, response)
 		return response
 
-/*		transaction := operations.NewTransactionWithoutCheck(req.XmlBody)
-		if _, err := transaction.Save(); err != nil {
-			response := transaction.ErrorXmlResponse(err)
-			glog.Infof("Worker[%v] answering with %v", req.Merchant, response)
-			return response
-		} else {
+		/*		transaction := operations.NewTransactionWithoutCheck(req.XmlBody)
+				if _, err := transaction.Save(); err != nil {
+					response := transaction.ErrorXmlResponse(err)
+					glog.Infof("Worker[%v] answering with %v", req.Merchant, response)
+					return response
+				} else {
 
 
-			return response
-		}*/
+					return response
+				}*/
 	})
 }

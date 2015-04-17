@@ -11,9 +11,11 @@ type Transaction struct {
 	TransactionWithoutCheck
 }
 
-func NewTransaction(data string, db DbConnection) *Transaction {
-	r := Transaction{}
-	err := xml.Unmarshal([]byte(data), &r)
+func NewTransaction(data string, db *DbConnection) *Transaction {
+	tw := TransactionWithoutCheck{ Db: db }
+	err := xml.Unmarshal([]byte(data), &tw)
+
+	r := Transaction{tw}
 
 	if err != nil {
 		fmt.Printf("error: %v", err)
