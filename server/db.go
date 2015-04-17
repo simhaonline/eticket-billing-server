@@ -1,45 +1,37 @@
-package operations
+package server
 
 // TODO move to separate package, to make it possible easily to include in different places
 // TODO use github.com/jinzhu/gorm
 // TODO use gopkg.in/validator.v2
 import (
 	cfg "eticket-billing-server/config"
-	"fmt"
 	gorm "github.com/jinzhu/gorm"
 	pq "gopkg.in/lib/pq.v0"
+	"fmt"
 )
-
-var db *gorm.DB
 
 var currentConfig *cfg.Config
 
-func SetupConnections(c *cfg.Config) {
-	currentConfig = c
+type DbConnection struct {
+	Db *gorm.DB
 }
 
-// TODO Maybe connect every time?
-func NewConnection() *gorm.DB {
+func NewConnection(c *cfg.Config) DbConnection {
 	connectionString := fmt.Sprintf("user=%v password=%v dbname=%v sslmode=disable",
 		currentConfig.DatabaseUser,
 		currentConfig.DatabasePassword,
 		currentConfig.DatabaseName)
 
-	dbd, ok := gorm.Open("postgres", connectionString)
+	db, ok := gorm.Open("postgres", connectionString)
 	if ok != nil {
 		panic(ok)
 	}
-	db = &dbd
 	db.DB()
 	db.DB().Ping()
 	db.DB().SetMaxIdleConns(10)
 	db.DB().SetMaxOpenConns(100)
 
-	return db
-}
-
-func GetDB() *gorm.DB {
-	return db
+	return DbConnection{ Db: &db }
 }
 
 func NormalizeDbError(pqError error) OperationError {

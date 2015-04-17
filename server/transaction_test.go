@@ -1,4 +1,4 @@
-package operations
+package server
 
 import (
 	"eticket-billing-server/config"
@@ -51,7 +51,7 @@ var xmlData string = `
 </request>`
 
 func (s *TransactionSuite) TestNewTransaction(c *C) {
-	record := NewTransaction(fmt.Sprintf(xmlData, 101, 12387))
+	record := NewTransaction(fmt.Sprintf(xmlData, 101, 12387), s.db)
 
 	c.Assert(reflect.TypeOf(record).String(), Equals, "*operations.Transaction")
 	c.Assert(record.Merchant, Equals, "11")
@@ -65,7 +65,7 @@ func (s *TransactionSuite) TestNewTransaction(c *C) {
 
 func (s *TransactionSuite) TestSave(c *C) {
 	initialValue := countRows(s)
-	record := NewTransaction(fmt.Sprintf(xmlData, 101, 100))
+	record := NewTransaction(fmt.Sprintf(xmlData, 101, 100), s.db)
 
 	s.db.Exec("select count(*)")
 	s.db.Create(record)
@@ -74,10 +74,10 @@ func (s *TransactionSuite) TestSave(c *C) {
 }
 
 func (s *TransactionSuite) TestNotEnoughMoney(c *C) {
-	record1 := NewTransaction(fmt.Sprintf(xmlData, 101, 100))
+	record1 := NewTransaction(fmt.Sprintf(xmlData, 101, 100), s.db)
 	s.db.Create(record1)
 
-	record2 := NewTransaction(fmt.Sprintf(xmlData, 102, -200))
+	record2 := NewTransaction(fmt.Sprintf(xmlData, 102, -200), s.db)
 	result := s.db.Create(record2)
 
 	error := result.Error
@@ -90,10 +90,10 @@ func (s *TransactionSuite) TestNotEnoughMoney(c *C) {
 
 func (s *TransactionSuite) TestDuplicationOfRecords(c *C) {
 	initialValue := countRows(s)
-	record1 := NewTransaction(fmt.Sprintf(xmlData, 101, 12387))
+	record1 := NewTransaction(fmt.Sprintf(xmlData, 101, 12387), s.db)
 	s.db.Create(record1)
 
-	record2 := NewTransaction(fmt.Sprintf(xmlData, 101, 12387))
+	record2 := NewTransaction(fmt.Sprintf(xmlData, 101, 12387), s.db)
 	result := s.db.Create(record2)
 
 	finishValue := countRows(s)
@@ -121,7 +121,7 @@ func (s *TransactionSuite) TestXmlResponse(c *C) {
 }
 
 func (s *TransactionSuite) TestErrorXmlResponse(c *C) {
-	record := NewTransaction(fmt.Sprintf(xmlData, 101, -100))
+	record := NewTransaction(fmt.Sprintf(xmlData, 101, -100), s.db)
 	result := s.db.Create(record)
 
 	xml := record.ErrorXmlResponse(result.Error)

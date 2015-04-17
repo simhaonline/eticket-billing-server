@@ -1,4 +1,4 @@
-package operations
+package server
 
 import (
 	"eticket-billing-server/config"
@@ -31,7 +31,7 @@ func (s *BudgetSuite) TearDownTest(c *C) {
 }
 
 func (s *BudgetSuite) TestCalculate(c *C) {
-	r1 := NewTransaction(fmt.Sprintf(xmlData, 101, 20200))
+	r1 := NewTransaction(fmt.Sprintf(xmlData, 101, 20200), s.db)
 	s.db.Create(r1)
 	r2 := NewTransaction(fmt.Sprintf(xmlData, 102, 33000))
 	s.db.Create(r2)

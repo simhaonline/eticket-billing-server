@@ -1,14 +1,18 @@
 package server
 
 import (
-	"bytes"
 	"eticket-billing-server/config"
-	"github.com/golang/glog"
+	glog "github.com/golang/glog"
+	"bytes"
 	"io"
 	"net"
-	"os"
 	"strings"
 	"time"
+	"flag"
+	"io/ioutil"
+	"os"
+	"syscall"
+	"fmt"
 )
 
 var (
@@ -21,16 +25,19 @@ type Server struct {
 	config      *config.Config
 	middlewares MiddlewareChain
 	workersPool WorkersPool
+	performersMapping PerformerFnMapping
+
+	pidFile string
 }
 
-func NewServer(config *config.Config, middlewares MiddlewareChain) *Server {
-	// TODO check connection to DB
+func NewServer(config *config.Config, middlewares MiddlewareChain, mapping PerformerFnMapping) *Server {
 	f, ok := os.OpenFile(config.RequestLogDir+"/requests.log", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0666)
 	if ok != nil {
 		panic(ok)
 	}
 
-	s := Server{stopChan: make(chan bool), requestLog: f, config: config, middlewares: middlewares}
+	s := Server{stopChan: make(chan bool), requestLog: f, config: config, middlewares: middlewares, performersMapping: mapping}
+	s.prepareServer()
 	return &s
 }
 
@@ -43,7 +50,9 @@ func (s Server) logRequest(req string) {
 }
 
 func (s *Server) Serve() {
-	glog.Info("Ready")
+	s.writePid()
+	glog.Infof("New Server is started with configuration %+v", s.config)
+	glog.Flush()
 
 	laddr, err := net.ResolveTCPAddr("tcp", ":2000")
 	if nil != err {
@@ -56,7 +65,7 @@ func (s *Server) Serve() {
 	}
 	defer l.Close()
 
-	s.workersPool = NewWorkersPool(s.config, s.middlewares)
+	s.workersPool = NewWorkersPool(s.config, s.middlewares, s.performersMapping)
 
 	for {
 		select {
@@ -122,4 +131,27 @@ func (s *Server) Stop(stChan chan bool) {
 	glog.Flush()
 
 	stChan <- true
+}
+
+func (s *Server) prepareServer() {
+	var environment string
+	var configFile string
+
+	flag.StringVar(&environment, "environment", "", "Setup environment: production, development")
+	flag.StringVar(&configFile, "config-file", "", "Configuration file")
+	flag.StringVar(&s.pidFile, "pidfile", "", "PID file")
+	flag.Parse()
+
+	s.config = config.NewConfig(environment, configFile)
+}
+
+func (s *Server) writePid() {
+	pid := syscall.Getpid()
+	glog.Info(pid)
+	spid := fmt.Sprintf("%v", pid)
+	err := ioutil.WriteFile(s.pidFile, []byte(spid), 0644)
+	if err != nil {
+		glog.Fatalf("Could not open pidfile. %v", err)
+		panic(err)
+	}
 }

@@ -1,8 +1,9 @@
 package server
 
 import (
-	"fmt"
+	"eticket-billing-server/config"
 	glog "github.com/golang/glog"
+	"fmt"
 	"os"
 	"strconv"
 )
@@ -13,11 +14,13 @@ type Worker struct {
 	quitChan    chan bool
 	requestsLog *os.File
 	middleware  MiddlewareChain
+	config config.Config
+	performersMapping PerformerFnMapping
 }
 
-func newWorker(merchant string, middleware MiddlewareChain, filePrefix string) *Worker {
+func newWorker(merchant string, middleware MiddlewareChain, cfg config.Config, mapping PerformerFnMapping) *Worker {
 	m, _ := strconv.Atoi(merchant)
-	fileName := fmt.Sprintf("%v/worker_%v.log", filePrefix, m)
+	fileName := fmt.Sprintf("%v/worker_%v.log", cfg.filePrefix, m)
 
 	f, ok := os.OpenFile(fileName, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0666)
 	if ok != nil {
@@ -25,7 +28,7 @@ func newWorker(merchant string, middleware MiddlewareChain, filePrefix string) *
 		panic(ok)
 	}
 
-	return &Worker{merchant, make(chan *Request), make(chan bool), f, middleware}
+	return &Worker{merchant, make(chan *Request), make(chan bool), f, middleware, cfg, mapping}
 }
 
 func (w Worker) logRequest(req string) {
@@ -45,9 +48,8 @@ func (w Worker) Serve() {
 		case req = <-w.inputChan:
 			w.logRequest(req.XmlBody)
 			glog.Infof("Worker[%v] received income request %v", w.merchant, req.XmlBody)
-
-			// TODO rename to Serve
-			w.middleware(req)
+			context := Context{Request: &req, DbConnection: NewConnection(w.config), PerformersMapping: w.performersMapping}
+			w.middleware(context)
 
 		case <-w.quitChan:
 			glog.Infof("Wroker %v quitting", w.merchant)

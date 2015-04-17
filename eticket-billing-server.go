@@ -1,56 +1,24 @@
 package main
 
 import (
-	"eticket-billing-server/config"
 	"eticket-billing-server/operations"
 	"eticket-billing-server/server"
-	"flag"
 	"fmt"
 	"github.com/golang/glog"
-	"io/ioutil"
-	"os"
-	"os/signal"
 	"runtime"
-	"syscall"
 )
 
 func main() {
 	runtime.GOMAXPROCS(runtime.NumCPU())
-
 	defer glog.Flush()
 
-	var environment string
-	var configFile string
-	var pidfile string
-
-	flag.StringVar(&environment, "environment", "", "Setup environment: production, development")
-	flag.StringVar(&configFile, "config-file", "", "Configuration file")
-	flag.StringVar(&pidfile, "pidfile", "", "PID file")
-	flag.Parse()
-
-	// TODO server should handle it by itself
-	pid := syscall.Getpid()
-	glog.Info(pid)
-	spid := fmt.Sprintf("%v", pid)
-	err := ioutil.WriteFile(pidfile, []byte(spid), 0644)
-	if err != nil {
-		glog.Fatalf("Could not open pidfile. %v", err)
-		panic(err)
-	}
-
 	mapping := make(server.PerformerFnMapping)
-	mapping["budget"] = server.Budget
-	mapping["transaction"] = server.Transaction
-	server.SetupMapping(mapping)
-
-	config := config.NewConfig(environment, configFile)
-	operations.SetupConnections(config)
+	mapping["budget"] = server.NewBudgetPerformer
+	mapping["transaction"] = server.NewTransactionPerformer
 
 	chain := server.NewChain(server.NewPingMiddleware, server.NewLogMiddleware, server.NewServeMiddleware)
-	// TODO we can pass mapping to server
-	server := server.NewServer(config, chain)
-	glog.Infof("New Server is starting with configuration %+v", config)
-	glog.Flush()
+
+	server := server.NewServer(chain, mapping)
 
 	go server.Serve()
 

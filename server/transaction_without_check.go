@@ -1,13 +1,12 @@
-package operations
+package server
 
 import (
 	"encoding/xml"
-	"errors"
 	"fmt"
 	"reflect"
 )
 
-type Transaction struct {
+type TransactionWithoutCheck struct {
 	ID              uint     `xml:"-" gorm:"primary_key"`
 	XMLName         xml.Name `xml:"request" sql:"-"`
 	ApplicationName string   `xml:"application_name"`
@@ -22,10 +21,12 @@ type Transaction struct {
 	OriginXml          string     `xml:",omitempty" sql:"-"`
 
 	Errors []OperationError `sql:"-" xml:"-"`
+
+	Db *DbConnection
 }
 
-func NewTransaction(data string) *Transaction {
-	r := Transaction{}
+func NewTransactionWithoutCheck(data string, db *DbConnection) *TransactionWithoutCheck {
+	r := TransactionWithoutCheck{ Db: db }
 	err := xml.Unmarshal([]byte(data), &r)
 
 	if err != nil {
@@ -39,34 +40,11 @@ func NewTransaction(data string) *Transaction {
 	return &r
 }
 
-func (t Transaction) TableName() string {
-	return "operations"
-}
-
-func (r *Transaction) IsPossible() bool {
-	budget := Budget{Merchant: r.Merchant}
-	amount, _ := budget.Calculate()
-	if r.Amount > 0 {
-		return true
-	} else {
-		return (amount+r.Amount > 0)
-	}
-}
-
-func (r *Transaction) BeforeCreate() (err error) {
-	if !r.IsPossible() {
-		erro := OperationError{Code: "not_enough_money", Message: "Not enough money for operation"}
-		r.Errors = append(r.Errors, erro)
-		err = errors.New("Not enough money for operation")
-	}
-	return
-}
-
-func (r *Transaction) XmlResponse() string {
+func (r *TransactionWithoutCheck) XmlResponse() string {
 	tmp := struct {
-		Transaction
+		TransactionWithoutCheck
 		XMLName xml.Name `xml:"answer"`
-	}{Transaction: *r}
+	}{TransactionWithoutCheck: *r}
 
 	tmp.OperationType = "transaction"
 	tmp.OriginXml = ""
@@ -75,13 +53,14 @@ func (r *Transaction) XmlResponse() string {
 	return string(output)
 }
 
-func (r *Transaction) ErrorXmlResponse(err error) string {
+func (r *TransactionWithoutCheck) ErrorXmlResponse(err error) string {
+	// TODO remove duplication
 	tmp := struct {
 		XMLName      xml.Name `xml:"answer"`
 		ErrorMessage string   `xml:"error>message"`
 		ErrorCode    string   `xml:"error>code"`
-		Transaction
-	}{Transaction: *r}
+		TransactionWithoutCheck
+	}{TransactionWithoutCheck: *r}
 
 	if t := reflect.TypeOf(err); t.String() == "*pq.Error" {
 		error := NormalizeDbError(err)

@@ -1,4 +1,4 @@
-package operations
+package server
 
 import (
 	driver "database/sql/driver"
