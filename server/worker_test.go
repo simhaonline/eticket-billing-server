@@ -10,8 +10,8 @@ import (
 func TestWorker(t *testing.T) { TestingT(t) }
 
 type WorkerSuite struct {
-	chain MiddlewareChain
-	config *config.Config
+	chain             MiddlewareChain
+	config            *config.Config
 	performersMapping *PerformerFnMapping
 }
 

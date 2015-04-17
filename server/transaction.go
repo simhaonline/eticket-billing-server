@@ -12,7 +12,7 @@ type Transaction struct {
 }
 
 func NewTransaction(data string, db *DbConnection) *Transaction {
-	tw := TransactionWithoutCheck{ Db: db }
+	tw := TransactionWithoutCheck{Db: db}
 	err := xml.Unmarshal([]byte(data), &tw)
 
 	r := Transaction{tw}
