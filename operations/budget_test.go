@@ -3,13 +3,16 @@ package operations
 import (
 	"eticket-billing-server/config"
 	"fmt"
+	gorm "github.com/jinzhu/gorm"
 	. "gopkg.in/check.v1"
 	"testing"
 )
 
 func TestBudget(t *testing.T) { TestingT(t) }
 
-type BudgetSuite struct{}
+type BudgetSuite struct {
+	db *gorm.DB
+}
 
 var _ = Suite(&BudgetSuite{})
 
@@ -19,34 +22,19 @@ func (s *BudgetSuite) SetUpSuite(c *C) {
 }
 
 func (s *BudgetSuite) SetUpTest(c *C) {
-	conn := NewConnection()
-	defer conn.Close()
-	_, ok := conn.Exec("truncate table operations")
-	if ok != nil {
-		panic(ok)
-	}
+	s.db.Exec("truncate table operations")
 }
 
 func (s *BudgetSuite) TearDownTest(c *C) {
-	conn := NewConnection()
-	defer conn.Close()
-	_, ok := conn.Exec("truncate table operations")
-	if ok != nil {
-		panic(ok)
-	}
+	s.db.Exec("truncate table operations")
 }
 
 func (s *BudgetSuite) TestCalculate(c *C) {
 	r1 := NewTransaction(fmt.Sprintf(xmlData, 101, 20200))
-	r1.Save()
+	s.db.Create(&r1)
 	r2 := NewTransaction(fmt.Sprintf(xmlData, 102, 33000))
-	r2.Save()
+	s.db.Create(&r2)
 
-	b := Budget{Merchant: "11", Amount: 0}
-	result, _ := b.Calculate()
-
-	c.Assert(result, Equals, int64(53200))
-	c.Assert(b.Amount, Equals, int64(53200))
 }
 
 func (s *BudgetSuite) TestXmlResponse(c *C) {

@@ -3,7 +3,6 @@ package operations
 import (
 	"encoding/xml"
 	"fmt"
-	pq "github.com/lib/pq"
 )
 
 type TransactionWithoutCheck struct {
@@ -25,7 +24,7 @@ func NewTransactionWithoutCheck(data string) *TransactionWithoutCheck {
 	return &r
 }
 
-func (r *TransactionWithoutCheck) Save() (uint64, error) {
+/*func (r *TransactionWithoutCheck) Save() (uint64, error) {
 	var id uint64
 
 	conn := NewConnection()
@@ -37,13 +36,13 @@ func (r *TransactionWithoutCheck) Save() (uint64, error) {
 	if err, ok := ok.(*pq.Error); ok {
 		if "unique_violation" == err.Code.Name() {
 			fmt.Println("Duplication warning")
-			return 0, &TransactionError{Code: "duplication", Message: "Duplication of operation"}
+			return 0, &OperationError{Code: "duplication", Message: "Duplication of operation"}
 		} else {
 			panic(err)
 		}
 	}
 	return id, nil
-}
+}*/
 
 func (r TransactionWithoutCheck) XmlResponse() string {
 	tmp := struct {
@@ -59,7 +58,7 @@ func (r TransactionWithoutCheck) XmlResponse() string {
 }
 
 func (r TransactionWithoutCheck) ErrorXmlResponse(err error) string {
-	error := err.(*TransactionError)
+	error := err.(*OperationError)
 
 	tmp := struct {
 		XMLName      xml.Name `xml:"answer"`

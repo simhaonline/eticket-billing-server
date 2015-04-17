@@ -9,7 +9,7 @@ import (
 
 type Worker struct {
 	merchant    string
-	inputChan   chan *request.Request
+	inputChan   chan *Request
 	quitChan    chan bool
 	requestsLog *os.File
 	middleware  MiddlewareChain
@@ -25,7 +25,7 @@ func newWorker(merchant string, middleware MiddlewareChain, filePrefix string) *
 		panic(ok)
 	}
 
-	return &Worker{merchant, make(chan *request.Request), make(chan bool), f, middleware}
+	return &Worker{merchant, make(chan *Request), make(chan bool), f, middleware}
 }
 
 func (w Worker) logRequest(req string) {
@@ -39,7 +39,7 @@ func (w Worker) logRequest(req string) {
 func (w Worker) Serve() {
 	glog.Infof("New Worker[%v] is spawned", w.merchant)
 
-	var req *request.Request
+	var req *Request
 	for {
 		select {
 		case req = <-w.inputChan:

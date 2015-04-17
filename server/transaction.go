@@ -1,13 +1,13 @@
-package performers
+package server
 
 import (
-	"eticket-billing-server/operations"
-	"github.com/golang/glog"
+//	"eticket-billing-server/operations"
+//	"github.com/golang/glog"
 )
 
-func Transaction(req *request.Request) *request.Request {
-	return req.Perform(func(req *request.Request) string {
-		transaction := operations.NewTransactionWithoutCheck(req.XmlBody)
+func Transaction(req *Request) *Request {
+	return req.Perform(func(req *Request) string {
+/*		transaction := operations.NewTransactionWithoutCheck(req.XmlBody)
 		if _, err := transaction.Save(); err != nil {
 			response := transaction.ErrorXmlResponse(err)
 			glog.Infof("Worker[%v] answering with %v", req.Merchant, response)
@@ -16,6 +16,7 @@ func Transaction(req *request.Request) *request.Request {
 			response := transaction.XmlResponse()
 			glog.Infof("Worker[%v] answering with %v", req.Merchant, response)
 			return response
-		}
+		}*/
+		return ""
 	})
 }

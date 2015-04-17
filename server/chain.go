@@ -1,12 +1,12 @@
 package server
 
-type MiddlewareChain func(*request.Request) *request.Request
+type MiddlewareChain func(*Request) *Request
 
-func NewChain(constructors ...func(func(*request.Request) *request.Request) func(*request.Request) *request.Request) MiddlewareChain {
+func NewChain(constructors ...func(func(*Request) *Request) func(*Request) *Request) MiddlewareChain {
 	var lastFunction MiddlewareChain
 	for i := len(constructors) - 1; i >= 0; i-- {
 		if i == len(constructors)-1 {
-			lastFunction = constructors[i](func(r *request.Request) *request.Request {
+			lastFunction = constructors[i](func(r *Request) *Request {
 				return r
 			})
 		} else {

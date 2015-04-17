@@ -21,13 +21,17 @@ type customTime struct {
 	time.Time
 }
 
-type TransactionError struct {
+type OperationError struct {
 	Message string
 	Code    string
 }
 
-func (t *TransactionError) Error() string {
+func (t *OperationError) String() string {
 	return fmt.Sprintf("%v: %v", t.Code, t.Message)
+}
+
+func (t *OperationError) Error() string {
+	return t.String()
 }
 
 // SEE http://play.golang.org/p/EFXZNsjE4a and

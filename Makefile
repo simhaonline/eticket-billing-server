@@ -12,15 +12,12 @@ test:
 	go test -tags=${BUILD_TAGS}
 	cd middleware;	 go test -tags=${BUILD_TAGS}
 	cd operations;	 go test -tags=${BUILD_TAGS}
-	cd performers;	 go test -tags=${BUILD_TAGS}
 	cd request;	 go test -tags=${BUILD_TAGS}
 	cd server;	 go test -tags=${BUILD_TAGS}
 
 fmt:
 	go fmt eticket-billing-server/config
-	go fmt eticket-billing-server/middleware
 	go fmt eticket-billing-server/operations
-	go fmt eticket-billing-server/performers
 	go fmt eticket-billing-server/request
 	go fmt eticket-billing-server/server
 
@@ -37,8 +34,6 @@ doc:
 
 vet:
 	go vet eticket-billing-server/config
-	go vet eticket-billing-server/middleware
 	go vet eticket-billing-server/operations
-	go vet eticket-billing-server/performers
 	go vet eticket-billing-server/request
 	go vet eticket-billing-server/server

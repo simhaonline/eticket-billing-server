@@ -1,9 +1,7 @@
 package operations
 
 import (
-	"database/sql"
 	"encoding/xml"
-	_ "github.com/lib/pq"
 )
 
 type Budget struct {
@@ -24,18 +22,18 @@ func (b *Budget) Calculate() (int64, error) {
 	conn := NewConnection()
 	defer conn.Close()
 
-	var amount sql.NullInt64
+	var transactions []Transaction
+	db := GetDB()
+	db.Where("merchant_id = ?", b.Merchant).Find(&transactions)
+	sum := calculateSum(transactions)
 
-	ok := conn.QueryRow("select sum(amount) from operations where merchant_id = $1", b.Merchant).Scan(&amount)
-	if ok != nil {
-		panic(ok)
+	return sum, nil
+}
+
+func calculateSum(transactions []Transaction) int64 {
+	var sum int64
+	for _, transaction := range transactions {
+		sum = sum + transaction.Amount
 	}
-
-	if amount.Valid {
-		b.Amount = amount.Int64
-	} else {
-		b.Amount = 0
-	}
-
-	return b.Amount, nil
+	return sum
 }

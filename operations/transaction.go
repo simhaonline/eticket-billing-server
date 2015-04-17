@@ -2,22 +2,26 @@ package operations
 
 import (
 	"encoding/xml"
+	"errors"
 	"fmt"
-	pq "github.com/lib/pq"
+	"reflect"
 )
 
 type Transaction struct {
-	XMLName         xml.Name `xml:"request"`
+	ID              uint     `xml:"-" gorm:"primary_key"`
+	XMLName         xml.Name `xml:"request" sql:"-"`
 	ApplicationName string   `xml:"application_name"`
-	OperationType   string   `xml:"type,attr"`
-	Merchant        string   `xml:"merchant"`
+	OperationType   string   `xml:"type,attr" sql:"-"`
+	Merchant        string   `xml:"merchant" gorm:"column:merchant_id"`
 	OperationName   string   `xml:"operation_name"`
 	OperationIdent  string   `xml:"operation_ident"`
 	Description     string   `xml:"description"`
 	Amount          int64    `xml:"amount"`
 
 	OperationCreatedAt customTime `xml:"operation_created_at"`
-	OriginXml          string     `xml:",omitempty"`
+	OriginXml          string     `xml:",omitempty" sql:"-"`
+
+	Errors []OperationError `sql:"-" xml:"-"`
 }
 
 func NewTransaction(data string) *Transaction {
@@ -35,6 +39,10 @@ func NewTransaction(data string) *Transaction {
 	return &r
 }
 
+func (t Transaction) TableName() string {
+	return "operations"
+}
+
 func (r *Transaction) IsPossible() bool {
 	budget := Budget{Merchant: r.Merchant}
 	amount, _ := budget.Calculate()
@@ -45,35 +53,20 @@ func (r *Transaction) IsPossible() bool {
 	}
 }
 
-func (r *Transaction) Save() (uint64, error) {
-	var id uint64
-
+func (r *Transaction) BeforeCreate() (err error) {
 	if !r.IsPossible() {
-		return 0, &TransactionError{Code: "not_enough_money", Message: "Not enough money for operation"}
-	} else {
-		conn := NewConnection()
-		defer conn.Close()
-		ok := conn.QueryRow(`INSERT INTO operations (merchant_id, application_name, operation_name, operation_ident, description, amount, operation_created_at, xml_data)
-                     VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id`,
-			r.Merchant, r.ApplicationName, r.OperationName, r.OperationIdent, r.Description, r.Amount, r.OperationCreatedAt, r.OriginXml).Scan(&id)
-
-		if err, ok := ok.(*pq.Error); ok {
-			if "unique_violation" == err.Code.Name() {
-				fmt.Println("Duplication warning")
-				return 0, &TransactionError{Code: "duplication", Message: "Duplication of operation"}
-			} else {
-				panic(err)
-			}
-		}
-		return id, nil
+		erro := OperationError{Code: "not_enough_money", Message: "Not enough money for operation"}
+		r.Errors = append(r.Errors, erro)
+		err = errors.New("Not enough money for operation")
 	}
+	return
 }
 
-func (r Transaction) XmlResponse() string {
+func (r *Transaction) XmlResponse() string {
 	tmp := struct {
 		Transaction
 		XMLName xml.Name `xml:"answer"`
-	}{Transaction: r}
+	}{Transaction: *r}
 
 	tmp.OperationType = "transaction"
 	tmp.OriginXml = ""
@@ -82,18 +75,23 @@ func (r Transaction) XmlResponse() string {
 	return string(output)
 }
 
-func (r Transaction) ErrorXmlResponse(err error) string {
-	error := err.(*TransactionError)
-
+func (r *Transaction) ErrorXmlResponse(err error) string {
 	tmp := struct {
 		XMLName      xml.Name `xml:"answer"`
 		ErrorMessage string   `xml:"error>message"`
 		ErrorCode    string   `xml:"error>code"`
 		Transaction
-	}{Transaction: r}
+	}{Transaction: *r}
 
-	tmp.ErrorMessage = error.Message
-	tmp.ErrorCode = error.Code
+	if t := reflect.TypeOf(err); t.String() == "*pq.Error" {
+		error := NormalizeDbError(err)
+		tmp.ErrorMessage = error.Message
+		tmp.ErrorCode = error.Code
+	} else if len(r.Errors) > 0 {
+		error := r.Errors[0]
+		tmp.ErrorMessage = error.Message
+		tmp.ErrorCode = error.Code
+	}
 
 	tmp.OperationType = "transaction"
 	tmp.OriginXml = ""

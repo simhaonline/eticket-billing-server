@@ -1,7 +1,7 @@
 package server
 
-func NewLogMiddleware(f func(*request.Request) *request.Request) func(*request.Request) *request.Request {
-	return func(req *request.Request) *request.Request {
+func NewLogMiddleware(f func(*Request) *Request) func(*Request) *Request {
+	return func(req *Request) *Request {
 		return f(req)
 	}
 }

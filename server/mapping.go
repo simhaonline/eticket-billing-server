@@ -1,6 +1,6 @@
-package performers
+package server
 
-type PerformerFn func(*request.Request) *request.Request
+type PerformerFn func(*Request) *Request
 type PerformerFnMapping map[string]PerformerFn
 
 var mapping PerformerFnMapping

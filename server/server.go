@@ -95,7 +95,7 @@ func (s *Server) Serve() {
 		input := string(buf)
 		input = strings.TrimSpace(input)
 
-		request := request.NewRequest(input)
+		request := NewRequest(input)
 		request.Conn = conn
 
 		glog.Info(input)

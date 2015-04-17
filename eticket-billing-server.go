@@ -3,7 +3,6 @@ package main
 import (
 	"eticket-billing-server/config"
 	"eticket-billing-server/operations"
-	"eticket-billing-server/performers"
 	"eticket-billing-server/server"
 	"flag"
 	"fmt"
@@ -39,15 +38,15 @@ func main() {
 		panic(err)
 	}
 
-	mapping := make(performers.PerformerFnMapping)
-	mapping["budget"] = performers.Budget
-	mapping["transaction"] = performers.Transaction
-	performers.SetupMapping(mapping)
+	mapping := make(server.PerformerFnMapping)
+	mapping["budget"] = server.Budget
+	mapping["transaction"] = server.Transaction
+	server.SetupMapping(mapping)
 
 	config := config.NewConfig(environment, configFile)
 	operations.SetupConnections(config)
 
-	chain := server.NewChain(middleware.NewPingMiddleware, middleware.NewLogMiddleware, middleware.NewServeMiddleware)
+	chain := server.NewChain(server.NewPingMiddleware, server.NewLogMiddleware, server.NewServeMiddleware)
 	// TODO we can pass mapping to server
 	server := server.NewServer(config, chain)
 	glog.Infof("New Server is starting with configuration %+v", config)

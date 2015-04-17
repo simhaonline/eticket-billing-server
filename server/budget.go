@@ -1,12 +1,12 @@
-package performers
+package server
 
 import (
 	"eticket-billing-server/operations"
 	"github.com/golang/glog"
 )
 
-func Budget(req *request.Request) *request.Request {
-	return req.Perform(func(req *request.Request) string {
+func Budget(req *Request) *Request {
+	return req.Perform(func(req *Request) string {
 		budget := operations.Budget{Merchant: req.Merchant}
 		budget.Calculate()
 		response := budget.XmlResponse()
