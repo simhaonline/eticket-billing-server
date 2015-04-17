@@ -33,7 +33,12 @@ func (s *BudgetSuite) TestCalculate(c *C) {
 	s.db.Db.Create(r1)
 	r2 := NewTransaction(fmt.Sprintf(transactionXmlData, 102, 33000), s.db)
 	s.db.Db.Create(r2)
-	// TODO assertion missed
+
+	b := Budget{Merchant: "11", Amount: 0, Db: s.db}
+	result, _ := b.Calculate()
+
+	c.Assert(result, Equals, int64(53200))
+	c.Assert(b.Amount, Equals, int64(53200))
 }
 
 func (s *BudgetSuite) TestXmlResponse(c *C) {

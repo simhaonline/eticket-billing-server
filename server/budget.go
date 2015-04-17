@@ -29,6 +29,7 @@ func (b *Budget) Calculate() (int64, error) {
 
 	b.Db.Db.Where("merchant_id = ?", b.Merchant).Find(&transactions)
 	sum := calculateSum(transactions)
+	b.Amount = sum
 
 	return sum, nil
 }
