@@ -10,9 +10,7 @@ run:
 
 test:
 	go test -tags=${BUILD_TAGS}
-	cd middleware;	 go test -tags=${BUILD_TAGS}
 	cd operations;	 go test -tags=${BUILD_TAGS}
-	cd request;	 go test -tags=${BUILD_TAGS}
 	cd server;	 go test -tags=${BUILD_TAGS}
 
 fmt:

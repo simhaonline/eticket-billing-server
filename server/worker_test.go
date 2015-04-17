@@ -1,7 +1,6 @@
 package server
 
 import (
-	"eticket-billing-server/middleware"
 	. "gopkg.in/check.v1"
 	"reflect"
 	"testing"
@@ -16,7 +15,7 @@ type WorkerSuite struct {
 var _ = Suite(&WorkerSuite{})
 
 func (s *WorkerSuite) SetUpSuite(c *C) {
-	s.chain = NewChain(middleware.NewServeMiddleware)
+	s.chain = NewChain(NewServeMiddleware)
 }
 
 func (s *WorkerSuite) TestnewWorker(c *C) {

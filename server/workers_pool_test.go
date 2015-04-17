@@ -2,7 +2,6 @@ package server
 
 import (
 	"eticket-billing-server/config"
-	"eticket-billing-server/middleware"
 	. "gopkg.in/check.v1"
 	"reflect"
 	"testing"
@@ -19,7 +18,7 @@ var _ = Suite(&WorkersPoolSuite{})
 
 func (s *WorkersPoolSuite) SetUpSuite(c *C) {
 	s.config = &config.Config{RequestLogDir: "/tmp"}
-	s.chain = NewChain(middleware.NewServeMiddleware)
+	s.chain = NewChain(NewServeMiddleware)
 }
 
 func (s *WorkersPoolSuite) TestNewWorkersPool(c *C) {

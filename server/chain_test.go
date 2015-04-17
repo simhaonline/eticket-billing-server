@@ -1,7 +1,6 @@
 package server
 
 import (
-	"eticket-billing-server/performers"
 	. "gopkg.in/check.v1"
 	"testing"
 )
@@ -14,19 +13,19 @@ type ChainSuite struct {
 
 var _ = Suite(&ChainSuite{CheckArray: []string{}})
 
-func BarePerformere(req *request.Request) *request.Request {
+func BarePerformere(req *Request) *Request {
 	return req
 }
 
 func (s *ChainSuite) SetUpSuite(c *C) {
-	mapping := make(performers.PerformerFnMapping)
+	mapping := make(PerformerFnMapping)
 	mapping["bare"] = BarePerformere
-	performers.SetupMapping(mapping)
+	SetupMapping(mapping)
 }
 
 func (s *ChainSuite) TestNewChain(c *C) {
-	request := request.Request{Merchant: "m10", OperationType: "bare"}
-	chain := NewChain(middleware.NewPingMiddleware, middleware.NewLogMiddleware, middleware.NewServeMiddleware)
+	request := Request{Merchant: "m10", OperationType: "bare"}
+	chain := NewChain(NewPingMiddleware, NewLogMiddleware, NewServeMiddleware)
 	result := chain(&request)
 
 	c.Assert(result.Merchant, Equals, request.Merchant)
