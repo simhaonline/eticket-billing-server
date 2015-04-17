@@ -1,11 +1,12 @@
 package main
 
 import (
-	"eticket-billing-server/operations"
 	"eticket-billing-server/server"
-	"fmt"
 	"github.com/golang/glog"
 	"runtime"
+	"os"
+	"os/signal"
+	"syscall"
 )
 
 func main() {

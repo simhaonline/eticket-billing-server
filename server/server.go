@@ -30,14 +30,10 @@ type Server struct {
 	pidFile string
 }
 
-func NewServer(config *config.Config, middlewares MiddlewareChain, mapping PerformerFnMapping) *Server {
-	f, ok := os.OpenFile(config.RequestLogDir+"/requests.log", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0666)
-	if ok != nil {
-		panic(ok)
-	}
-
-	s := Server{stopChan: make(chan bool), requestLog: f, config: config, middlewares: middlewares, performersMapping: mapping}
+func NewServer(middlewares MiddlewareChain, mapping PerformerFnMapping) *Server {
+	s := Server{stopChan: make(chan bool), middlewares: middlewares, performersMapping: mapping}
 	s.prepareServer()
+
 	return &s
 }
 
@@ -143,6 +139,13 @@ func (s *Server) prepareServer() {
 	flag.Parse()
 
 	s.config = config.NewConfig(environment, configFile)
+
+	f, ok := os.OpenFile(s.config.RequestLogDir+"/requests.log", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0666)
+	if ok != nil {
+		panic(ok)
+	}
+
+	s.requestLog = f
 }
 
 func (s *Server) writePid() {
