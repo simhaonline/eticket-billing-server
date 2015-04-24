@@ -4,6 +4,7 @@ import (
 	"encoding/xml"
 	"fmt"
 	"reflect"
+	"time"
 )
 
 type TransactionWithoutCheck struct {
@@ -17,7 +18,7 @@ type TransactionWithoutCheck struct {
 	Description     string   `xml:"description"`
 	Amount          int64    `xml:"amount"`
 
-	OperationCreatedAt customTime `xml:"operation_created_at"`
+	OperationCreatedAt time.Time `xml:"operation_created_at"`
 	OriginXml          string     `xml:",omitempty" sql:"-"`
 
 	Errors []OperationError `sql:"-" xml:"-"`

@@ -48,7 +48,7 @@ var transactionXmlData string = `
   <operation_name>charge</operation_name>
   <operation_ident>%v</operation_ident>
   <description>Charge</description>
-  <operation_created_at>2014-10-01 20:13:56</operation_created_at>
+  <operation_created_at>2014-10-01T20:13:56Z</operation_created_at>
   <amount>%v</amount>
 </request>`
 
@@ -61,12 +61,13 @@ func (s *TransactionSuite) TestNewTransaction(c *C) {
 	c.Assert(record.Description, Equals, "Charge")
 	c.Assert(record.Amount, Equals, int64(12387))
 
-	ct := customTime{time.Date(2014, time.October, 1, 20, 13, 56, 0, time.UTC)}
+	ct := time.Date(2014, time.October, 1, 20, 13, 56, 0, time.UTC)
 	c.Assert(record.OperationCreatedAt, Equals, ct)
 }
 
 func (s *TransactionSuite) TestSave(c *C) {
 	initialValue := countRows(s)
+
 	record := NewTransaction(fmt.Sprintf(transactionXmlData, 101, 100), s.db)
 
 	s.db.Db.Exec("select count(*)")

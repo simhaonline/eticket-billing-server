@@ -10,7 +10,7 @@ type Budget struct {
 	Merchant      string   `xml:"merchant"`
 	Amount        int64    `xml:"amount"`
 
-	Db *DbConnection
+	Db *DbConnection `xml:"-"`
 }
 
 func NewBudget(data string, merchant string, db *DbConnection) *Budget {

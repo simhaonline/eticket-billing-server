@@ -34,6 +34,7 @@ func (t Transaction) TableName() string {
 
 func (r *Transaction) IsPossible() bool {
 	budget := Budget{Merchant: r.Merchant, Db: r.Db}
+
 	amount, _ := budget.Calculate()
 	if r.Amount > 0 {
 		return true

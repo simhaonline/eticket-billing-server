@@ -42,6 +42,7 @@ func (s *BudgetSuite) TestCalculate(c *C) {
 }
 
 func (s *BudgetSuite) TestXmlResponse(c *C) {
+	// TODO check after save to database. It could return external columns
 	budget := Budget{Merchant: "1", Amount: 123}
 	answer := []byte(`<response type="budget"><merchant>1</merchant><amount>123</amount></response>`)
 	answer = append(answer, '\n')
